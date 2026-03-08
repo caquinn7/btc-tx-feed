@@ -1,17 +1,23 @@
 defmodule BtcTxFeed.MixProject do
   use Mix.Project
 
+  @app :btc_tx_feed
+
   def project do
     [
-      app: :btc_tx_feed,
+      app: @app,
       version: "0.1.0",
-      elixir: "~> 1.15",
+      elixir: "~> 1.19",
+      name: "#{@app}",
+      archives: [mix_gleam: "~> 0.6.2"],
       elixirc_paths: elixirc_paths(Mix.env()),
+      erlc_include_path: "build/dev/erlang/#{@app}/include",
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
-      compilers: [:phoenix_live_view] ++ Mix.compilers(),
-      listeners: [Phoenix.CodeReloader]
+      compilers: [:gleam, :phoenix_live_view] ++ Mix.compilers(),
+      listeners: [Phoenix.CodeReloader],
+      prune_code_paths: false,
     ]
   end
 
@@ -32,8 +38,8 @@ defmodule BtcTxFeed.MixProject do
   end
 
   # Specifies which paths to compile per environment.
-  defp elixirc_paths(:test), do: ["lib", "test/support"]
-  defp elixirc_paths(_), do: ["lib"]
+  defp elixirc_paths(:test), do: ["lib", "test/support", "build/dev/erlang/#{@app}/_gleam_artefacts"]
+  defp elixirc_paths(_), do: ["lib", "build/dev/erlang/#{@app}/_gleam_artefacts"]
 
   # Specifies your project dependencies.
   #
@@ -62,7 +68,10 @@ defmodule BtcTxFeed.MixProject do
       {:gettext, "~> 1.0"},
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.2.0"},
-      {:bandit, "~> 1.5"}
+      {:bandit, "~> 1.5"},
+      {:gleam_stdlib, "~> 0.44 or ~> 1.0"},
+      {:gleeunit, "~> 1.0", only: [:dev, :test], runtime: false},
+      {:btc_tx, git: "https://github.com/caquinn7/btc-tx.git", branch: "main"},
     ]
   end
 
@@ -82,7 +91,8 @@ defmodule BtcTxFeed.MixProject do
         "esbuild btc_tx_feed --minify",
         "phx.digest"
       ],
-      precommit: ["compile --warnings-as-errors", "deps.unlock --unused", "format", "test"]
+      precommit: ["compile --warnings-as-errors", "deps.unlock --unused", "format", "test"],
+      "deps.get": ["deps.get", "gleam.deps.get"]
     ]
   end
 end
