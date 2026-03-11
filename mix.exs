@@ -17,7 +17,7 @@ defmodule BtcTxFeed.MixProject do
       deps: deps(),
       compilers: [:gleam, :phoenix_live_view] ++ Mix.compilers(),
       listeners: [Phoenix.CodeReloader],
-      prune_code_paths: false,
+      prune_code_paths: false
     ]
   end
 
@@ -38,7 +38,9 @@ defmodule BtcTxFeed.MixProject do
   end
 
   # Specifies which paths to compile per environment.
-  defp elixirc_paths(:test), do: ["lib", "test/support", "build/dev/erlang/#{@app}/_gleam_artefacts"]
+  defp elixirc_paths(:test),
+    do: ["lib", "test/support", "build/dev/erlang/#{@app}/_gleam_artefacts"]
+
   defp elixirc_paths(_), do: ["lib", "build/dev/erlang/#{@app}/_gleam_artefacts"]
 
   # Specifies your project dependencies.
@@ -69,9 +71,10 @@ defmodule BtcTxFeed.MixProject do
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.2.0"},
       {:bandit, "~> 1.5"},
+      {:mint_web_socket, "~> 1.0"},
       {:gleam_stdlib, "~> 0.44 or ~> 1.0"},
       {:gleeunit, "~> 1.0", only: [:dev, :test], runtime: false},
-      {:btc_tx, git: "https://github.com/caquinn7/btc-tx.git", branch: "main"},
+      {:btc_tx, git: "https://github.com/caquinn7/btc-tx.git", branch: "main"}
     ]
   end
 

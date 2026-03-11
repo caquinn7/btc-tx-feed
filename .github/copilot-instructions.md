@@ -57,5 +57,6 @@ When proposing or implementing changes:
 - `/AGENTS.md`
 - `/docs/btc_tx_api.md`
 - `/docs/live_mempool_app_mvp_feasibility.md`
+- `/docs/mempool-space-api.md`
 
 When a task is closely related to one of these documents, consult it and keep the implementation aligned with it.

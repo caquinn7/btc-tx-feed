@@ -17,7 +17,7 @@ defmodule BtcTxFeedWeb.Router do
   scope "/", BtcTxFeedWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    live "/", MempoolLive
   end
 
   # Other scopes may use custom stacks.
