@@ -6,12 +6,14 @@ defmodule BtcTxFeed.MempoolSocket do
 
   @dialyzer {:nowarn_function, [handle_response: 2, send_frame: 2]}
 
-  defstruct conn: nil,
-            websocket: nil,
-            request_ref: nil,
-            status: nil,
-            resp_headers: nil,
-            closing?: false
+  defstruct [
+    :conn,
+    :websocket,
+    :request_ref,
+    :status,
+    :resp_headers,
+    txids: []
+  ]
 
   # Client
 
@@ -37,6 +39,7 @@ defmodule BtcTxFeed.MempoolSocket do
     # up by the catch-all handle_info(message, state) clause below.
     with {:ok, conn} <- Mint.HTTP.connect(:https, uri.host, uri.port, protocols: [:http1]),
          {:ok, conn, ref} <- Mint.WebSocket.upgrade(:wss, conn, uri.path, []) do
+      Process.send_after(self(), :flush, 100)
       {:noreply, %{state | conn: conn, request_ref: ref}}
     else
       {:error, _conn, reason} ->
@@ -47,6 +50,19 @@ defmodule BtcTxFeed.MempoolSocket do
         Logger.error("Failed to connect: #{inspect(reason)}")
         {:stop, reason, state}
     end
+  end
+
+  @impl GenServer
+  def handle_info(:flush, %{txids: []} = state) do
+    Process.send_after(self(), :flush, 100)
+    {:noreply, state}
+  end
+
+  @impl GenServer
+  def handle_info(:flush, state) do
+    Phoenix.PubSub.broadcast(BtcTxFeed.PubSub, "mempool:txids", {:new_txids, state.txids})
+    Process.send_after(self(), :flush, 100)
+    {:noreply, %{state | txids: []}}
   end
 
   @impl GenServer
@@ -124,16 +140,15 @@ defmodule BtcTxFeed.MempoolSocket do
 
         case Jason.decode(text) do
           {:ok, %{"mempool-txids" => %{"added" => txids}}} when is_list(txids) ->
-            Phoenix.PubSub.broadcast(BtcTxFeed.PubSub, "mempool:txids", {:new_txids, txids})
+            %{state | txids: txids ++ state.txids}
 
           {:ok, _} ->
-            :ok
+            state
 
           {:error, reason} ->
             Logger.warning("Failed to decode WebSocket message: #{inspect(reason)}")
+            state
         end
-
-        state
 
       frame, state ->
         Logger.debug("Unexpected frame received: #{inspect(frame)}")

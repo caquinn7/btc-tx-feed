@@ -13,8 +13,6 @@ defmodule BtcTxFeedWeb.MempoolLive do
 
     socket =
       socket
-      |> assign(:txids, [])
-      |> assign(:tx_count, 0)
       |> stream(:txids, [])
 
     {:ok, socket}
@@ -22,17 +20,10 @@ defmodule BtcTxFeedWeb.MempoolLive do
 
   @impl true
   def handle_info({:new_txids, txids}, socket) do
-    updated_txids =
-      txids
-      |> Enum.map(fn txid -> %{id: txid, txid: txid} end)
-      |> Enum.concat(socket.assigns.txids)
-      |> Enum.take(50)
-
     socket =
-      socket
-      |> stream(:txids, updated_txids, reset: true)
-      |> assign(:txids, updated_txids)
-      |> assign(:tx_count, length(updated_txids))
+      txids
+      |> Enum.map(&%{id: &1, txid: &1})
+      |> Enum.reduce(socket, &stream_insert(&2, :txids, &1, at: 0, limit: 10))
 
     {:noreply, socket}
   end
@@ -66,7 +57,6 @@ defmodule BtcTxFeedWeb.MempoolLive do
 
       <%!-- Stats bar --%>
       <div class="flex items-center justify-between mb-4 text-xs text-base-content/40 font-mono">
-        <span>{@tx_count} transactions</span>
         <span>Click a txid to inspect it</span>
       </div>
 
@@ -76,6 +66,10 @@ defmodule BtcTxFeedWeb.MempoolLive do
         phx-update="stream"
         class="flex flex-col gap-1"
       >
+        <%!-- Empty state (only shown when stream is empty) --%>
+        <div class="hidden only:block text-center text-sm text-base-content/40 py-16">
+          Waiting for transactions…
+        </div>
         <div
           :for={{id, tx} <- @streams.txids}
           id={id}
@@ -88,14 +82,6 @@ defmodule BtcTxFeedWeb.MempoolLive do
           <.icon name="hero-chevron-right" class="size-4 text-base-content/20 shrink-0 ml-auto" />
         </div>
       </div>
-
-      <%!-- Empty state (only shown when stream is empty) --%>
-      <p
-        :if={@tx_count == 0}
-        class="text-center text-sm text-base-content/40 py-16"
-      >
-        Waiting for transactions…
-      </p>
     </Layouts.app>
     """
   end
