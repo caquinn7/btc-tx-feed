@@ -186,12 +186,12 @@ Pass in the value from `get_output_script_pubkey/1`.
 ```elixir
 script = :btc_tx.get_output_script_pubkey(output)
 case :btc_tx.classify_output_script(script) do
-  :p2pkh                          -> :legacy_single_sig
-  :p2sh                           -> :script_hash
-  :p2wpkh                         -> :segwit_single_sig
-  :p2wsh                          -> :segwit_script_hash
-  :p2tr                           -> :taproot
-  :p2pk                           -> :pay_to_pubkey
+  :p2_p_k_h                       -> :legacy_single_sig
+  :p2_s_h                         -> :script_hash
+  :p2_w_p_k_h                     -> :segwit_single_sig
+  :p2_w_s_h                       -> :segwit_script_hash
+  :p2_t_r                         -> :taproot
+  :p2_p_k                         -> :pay_to_pubkey
   :multisig                       -> :bare_multisig
   :null_data                      -> :op_return
   {:unknown_witness, version: v}  -> {:future_witness_version, v}
@@ -203,12 +203,12 @@ end
 
 | Variant | Description |
 |---|---|
-| `:p2pk` | Pay-to-public-key (compressed or uncompressed key + OP_CHECKSIG) |
-| `:p2pkh` | Pay-to-public-key-hash — most common legacy output |
-| `:p2sh` | Pay-to-script-hash |
-| `:p2wpkh` | SegWit v0 single-key spend |
-| `:p2wsh` | SegWit v0 script-hash spend |
-| `:p2tr` | Taproot (SegWit v1) |
+| `:p2_p_k` | Pay-to-public-key (compressed or uncompressed key + OP_CHECKSIG) |
+| `:p2_p_k_h` | Pay-to-public-key-hash — most common legacy output |
+| `:p2_s_h` | Pay-to-script-hash |
+| `:p2_w_p_k_h` | SegWit v0 single-key spend |
+| `:p2_w_s_h` | SegWit v0 script-hash spend |
+| `:p2_t_r` | Taproot (SegWit v1) |
 | `:multisig` | Bare m-of-n multisig (1 ≤ m ≤ n ≤ 3), Bitcoin Core standard |
 | `:null_data` | OP_RETURN output, push-only after OP_RETURN, total ≤ 83 bytes |
 | `{:unknown_witness, version: v}` | Future witness version (v is 1–16, excluding known ones) |
