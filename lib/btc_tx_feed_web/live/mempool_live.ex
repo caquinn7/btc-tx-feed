@@ -84,9 +84,9 @@ defmodule BtcTxFeedWeb.MempoolLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash}>
-      <div class="flex gap-6">
+      <div class="flex gap-6 h-full">
         <%!-- Left column: header + txid list --%>
-        <div class="w-2/5 shrink-0 flex flex-col">
+        <div class="w-2/5 shrink-0 flex flex-col overflow-y-auto min-h-0">
           <%!-- Page header --%>
           <div class="mb-8">
             <div class="flex items-center gap-3 mb-1">
@@ -118,7 +118,10 @@ defmodule BtcTxFeedWeb.MempoolLive do
           <%!-- Transaction list --%>
           <div id="transactions" phx-update="stream" class="flex flex-col gap-1">
             <%!-- Empty state (only shown when stream is empty) --%>
-            <div class="hidden only:block text-center text-sm text-base-content/40 py-16">
+            <div
+              id="txids-empty-state"
+              class="hidden only:block text-center text-sm text-base-content/40 py-16"
+            >
               Waiting for transactions…
             </div>
             <div
@@ -159,7 +162,7 @@ defmodule BtcTxFeedWeb.MempoolLive do
         </div>
 
         <%!-- Right column: details panel --%>
-        <div class="flex-1 min-w-0">
+        <div class="flex-1 min-w-0 overflow-y-auto min-h-0">
           <%= cond do %>
             <% @tx_details == nil -> %>
               <div
