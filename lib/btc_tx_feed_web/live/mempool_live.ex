@@ -1,14 +1,15 @@
 defmodule BtcTxFeedWeb.MempoolLive do
   use BtcTxFeedWeb, :live_view
 
-  alias BtcTxFeed.{MempoolHttpClient, TxParser}
+  alias BtcTxFeed.{MempoolHttpClient, MempoolSocket, TxParser}
 
   @impl true
   def mount(_params, _session, socket) do
     socket =
       if connected?(socket) do
         Phoenix.PubSub.subscribe(BtcTxFeed.PubSub, "mempool:txids")
-        assign(socket, :connected, true)
+        Phoenix.PubSub.subscribe(BtcTxFeed.PubSub, "mempool:status")
+        assign(socket, :connected, MempoolSocket.connected?())
       else
         assign(socket, :connected, false)
       end
@@ -49,6 +50,11 @@ defmodule BtcTxFeedWeb.MempoolLive do
   @impl true
   def handle_info({:DOWN, _ref, :process, _pid, _reason}, socket) do
     {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info({:socket_status, status}, socket) do
+    {:noreply, assign(socket, :connected, status == :connected)}
   end
 
   @impl true
