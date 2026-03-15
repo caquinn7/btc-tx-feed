@@ -18,15 +18,15 @@ defmodule BtcTxFeedWeb.AnalyticsLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
-      <div class="max-w-4xl mx-auto py-8 space-y-8">
+    <Layouts.app flash={@flash} current_path={~p"/analytics"}>
+      <div class="max-w-4xl mx-auto space-y-8">
         <%!-- Page header --%>
         <div>
           <div class="flex items-center justify-between mb-1">
             <h1 class="text-2xl font-bold tracking-tight">Analytics</h1>
             <.link
               navigate={~p"/analytics/failures"}
-              class="text-sm text-base-content/50 hover:text-base-content transition-colors"
+              class="text-sm text-base-content/50 hover:text-bitcoin transition-colors"
             >
               {failure_count(@stats)} decode {if failure_count(@stats) == 1,
                 do: "failure",

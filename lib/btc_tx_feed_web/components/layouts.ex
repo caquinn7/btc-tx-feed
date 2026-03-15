@@ -27,6 +27,10 @@ defmodule BtcTxFeedWeb.Layouts do
   """
   attr :flash, :map, required: true, doc: "the map of flash messages"
 
+  attr :current_path, :string,
+    default: nil,
+    doc: "the current request path for active nav styling"
+
   attr :current_scope, :map,
     default: nil,
     doc: "the current [scope](https://hexdocs.pm/phoenix/scopes.html)"
@@ -36,38 +40,78 @@ defmodule BtcTxFeedWeb.Layouts do
   def app(assigns) do
     ~H"""
     <header class="navbar px-4 sm:px-6 lg:px-8">
-      <div class="flex-1">
-        <a href="/" class="flex-1 flex w-fit items-center gap-2">
-          <img src={~p"/images/logo.svg"} width="36" />
-          <span class="text-sm font-semibold">v{Application.spec(:phoenix, :vsn)}</span>
+      <div class="flex-1 flex items-center gap-6">
+        <a
+          href="/"
+          class={[
+            "flex w-fit items-center gap-2 transition-opacity",
+            if(@current_path == "/",
+              do: "font-semibold text-bitcoin",
+              else: "font-medium opacity-60 hover:opacity-100"
+            )
+          ]}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="size-8"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z"
+            />
+          </svg>
+          <span class="text-lg">Mempool Feed</span>
         </a>
+        <nav class="flex items-center gap-4">
+          <.link
+            navigate={~p"/analytics"}
+            class={[
+              "flex items-center gap-2 whitespace-nowrap text-sm transition-opacity",
+              if(String.starts_with?(@current_path || "", "/analytics"),
+                do: "font-semibold text-bitcoin",
+                else: "font-medium opacity-60 hover:opacity-100"
+              )
+            ]}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="size-8"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12"
+              />
+            </svg>
+            <span class="text-lg">Analytics</span>
+          </.link>
+        </nav>
       </div>
       <div class="flex-none">
         <ul class="flex flex-column px-1 space-x-4 items-center">
           <li>
-            <a href="https://phoenixframework.org/" class="btn btn-ghost">Website</a>
-          </li>
-          <li>
-            <a href="https://github.com/phoenixframework/phoenix" class="btn btn-ghost">GitHub</a>
-          </li>
-          <li>
             <.theme_toggle />
-          </li>
-          <li>
-            <a href="https://hexdocs.pm/phoenix/overview.html" class="btn btn-primary">
-              Get Started <span aria-hidden="true">&rarr;</span>
-            </a>
           </li>
         </ul>
       </div>
     </header>
 
-    <main class="px-4 pt-6 pb-4 sm:px-6 lg:px-8 h-[calc(100vh-4rem)] overflow-y-auto">
-      <div class="mx-auto max-w-7xl h-full">
+    <main class="px-4 pt-6 sm:px-6 lg:px-8 h-[calc(100vh-4rem)] overflow-y-auto">
+      <div class="mx-auto max-w-7xl pb-8">
         {render_slot(@inner_block)}
       </div>
     </main>
 
+    <footer class="mt-8"></footer>
     <.flash_group flash={@flash} />
     """
   end
