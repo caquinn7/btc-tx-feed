@@ -13,6 +13,7 @@ defmodule BtcTxFeed.TxSampler do
 
   @queue_cap 500
   @tick_ms 1_000
+  @backoff_ms 30_000
 
   # ---------------------------------------------------------------------------
   # Public API
@@ -30,7 +31,7 @@ defmodule BtcTxFeed.TxSampler do
   def init(_) do
     Phoenix.PubSub.subscribe(BtcTxFeed.PubSub, "mempool:txids")
     Process.send_after(self(), :tick, @tick_ms)
-    {:ok, %{queue: :queue.new(), queue_size: 0}}
+    {:ok, %{queue: :queue.new(), queue_size: 0, resume_at: nil}}
   end
 
   @impl true
@@ -43,15 +44,27 @@ defmodule BtcTxFeed.TxSampler do
   def handle_info(:tick, state) do
     Process.send_after(self(), :tick, @tick_ms)
 
-    case :queue.out(state.queue) do
-      {:empty, _} ->
-        {:noreply, state}
+    if state.resume_at && System.monotonic_time(:millisecond) < state.resume_at do
+      {:noreply, state}
+    else
+      case :queue.out(state.queue) do
+        {:empty, _} ->
+          {:noreply, state}
 
-      {{:value, txid}, rest} ->
-        state = %{state | queue: rest, queue_size: state.queue_size - 1}
-        Task.start(fn -> process(txid) end)
-        {:noreply, state}
+        {{:value, txid}, rest} ->
+          state = %{state | queue: rest, queue_size: state.queue_size - 1}
+          sampler_pid = self()
+          Task.start(fn -> process(txid, sampler_pid) end)
+          {:noreply, state}
+      end
     end
+  end
+
+  @impl true
+  def handle_info(:backoff, state) do
+    resume_at = System.monotonic_time(:millisecond) + @backoff_ms
+    Logger.warning("TxSampler: 429 received, backing off for #{@backoff_ms}ms")
+    {:noreply, %{state | resume_at: resume_at}}
   end
 
   # ---------------------------------------------------------------------------
@@ -68,7 +81,7 @@ defmodule BtcTxFeed.TxSampler do
     %{state | queue: :queue.in(txid, rest)}
   end
 
-  defp process(txid) do
+  defp process(txid, sampler_pid) do
     case MempoolHttpClient.get_raw_tx(txid) do
       {:ok, raw} ->
         try do
@@ -86,8 +99,11 @@ defmodule BtcTxFeed.TxSampler do
             FailureStore.insert(nil, raw, Exception.message(e))
         end
 
+      {:error, {:http_error, 429}} ->
+        send(sampler_pid, :backoff)
+
       {:error, _} ->
-        # HTTP error / 429 — drop silently
+        # Other HTTP errors — drop silently
         :ok
     end
   end
