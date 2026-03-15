@@ -18,6 +18,8 @@ defmodule BtcTxFeedWeb.Router do
     pipe_through :browser
 
     live "/", MempoolLive
+    live "/analytics", AnalyticsLive
+    live "/analytics/failures", FailuresLive
   end
 
   # Other scopes may use custom stacks.
