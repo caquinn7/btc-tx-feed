@@ -53,8 +53,13 @@ defmodule BtcTxFeed.TxStats do
 
   @doc "Returns a plain map of all counters for the dashboard."
   def get do
-    :ets.tab2list(@table)
-    |> Map.new()
+    case :ets.whereis(@table) do
+      :undefined ->
+        %{}
+
+      _ ->
+        Map.new(:ets.tab2list(@table))
+    end
   end
 
   # ---------------------------------------------------------------------------

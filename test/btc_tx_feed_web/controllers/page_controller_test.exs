@@ -3,6 +3,6 @@ defmodule BtcTxFeedWeb.PageControllerTest do
 
   test "GET /", %{conn: conn} do
     conn = get(conn, ~p"/")
-    assert html_response(conn, 200) =~ "Live Mempool Feed"
+    assert html_response(conn, 200) =~ "Mempool Feed"
   end
 end
