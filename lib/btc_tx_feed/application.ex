@@ -8,16 +8,19 @@ defmodule BtcTxFeed.Application do
 
   @impl true
   def start(_type, _args) do
-    children = [
-      BtcTxFeedWeb.Telemetry,
-      {DNSCluster, query: Application.get_env(:btc_tx_feed, :dns_cluster_query) || :ignore},
-      {Phoenix.PubSub, name: BtcTxFeed.PubSub},
-      MempoolSocket,
-      # Start a worker by calling: BtcTxFeed.Worker.start_link(arg)
-      # {BtcTxFeed.Worker, arg},
-      # Start to serve requests, typically the last entry
-      BtcTxFeedWeb.Endpoint
-    ]
+    children =
+      [
+        BtcTxFeedWeb.Telemetry,
+        {DNSCluster, query: Application.get_env(:btc_tx_feed, :dns_cluster_query) || :ignore},
+        {Phoenix.PubSub, name: BtcTxFeed.PubSub},
+        MempoolSocket,
+        BtcTxFeed.Repo
+      ] ++
+        analytics_children() ++
+        [
+          # Start to serve requests, typically the last entry
+          BtcTxFeedWeb.Endpoint
+        ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
@@ -31,5 +34,13 @@ defmodule BtcTxFeed.Application do
   def config_change(changed, _new, removed) do
     BtcTxFeedWeb.Endpoint.config_change(changed, removed)
     :ok
+  end
+
+  defp analytics_children do
+    if Application.get_env(:btc_tx_feed, :start_analytics, true) do
+      [BtcTxFeed.TxStats, BtcTxFeed.TxSampler]
+    else
+      []
+    end
   end
 end
