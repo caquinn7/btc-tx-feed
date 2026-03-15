@@ -18,6 +18,9 @@ defmodule BtcTxFeed.TxParserTest do
   # txid: 0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e68bebb44a74b1efd512098
   @coinbase_hex "01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff0704ffff001d0104ffffffff0100f2052a0100000043410496b538e853519c726a2c91e61ec11600ae1390813a627c66fb8be7947be63c52da7589379515d4e0a604f8141781e62294721166bf621e73a82cbf2342c858eeac00000000"
 
+  # Decodes successfully but fails validate_consensus/1
+  @negative_output_hex "0100000001000000000000000000000000000000000000000000000000000000000000000000000000000000000001ffffffffffffffff0000000000"
+
   defp raw(hex), do: Base.decode16!(hex, case: :lower)
 
   # ---------------------------------------------------------------------------
@@ -31,6 +34,24 @@ defmodule BtcTxFeed.TxParserTest do
 
     test "returns error for truncated/garbage bytes" do
       assert {:error, _} = TxParser.parse(<<1, 0, 0, 0, 0, 0>>)
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # Validation flag
+  # ---------------------------------------------------------------------------
+
+  describe "parse/1 validated flag" do
+    test "includes validated: true for valid transactions" do
+      {:ok, details} = TxParser.parse(raw(@legacy_v1_hex))
+      assert details.validated == true
+    end
+
+    test "includes validated: false when consensus validation fails" do
+      {:ok, details} =
+        TxParser.parse(raw(@negative_output_hex))
+
+      assert details.validated == false
     end
   end
 
@@ -105,6 +126,10 @@ defmodule BtcTxFeed.TxParserTest do
       assert details.weight > 0
       assert details.vsize > 0
       assert details.base_size == details.total_size
+    end
+
+    test "validated flag is true", %{details: details} do
+      assert details.validated == true
     end
   end
 
@@ -187,6 +212,10 @@ defmodule BtcTxFeed.TxParserTest do
     test "vsize is ceil(weight / 4)", %{details: details} do
       assert details.vsize == ceil(details.weight / 4)
     end
+
+    test "validated flag is true", %{details: details} do
+      assert details.validated == true
+    end
   end
 
   # ---------------------------------------------------------------------------
@@ -215,6 +244,10 @@ defmodule BtcTxFeed.TxParserTest do
 
     test "witnesses list is empty", %{details: details} do
       assert details.witnesses == []
+    end
+
+    test "validated flag is true", %{details: details} do
+      assert details.validated == true
     end
   end
 
@@ -254,6 +287,10 @@ defmodule BtcTxFeed.TxParserTest do
 
     test "txid matches known block 1 coinbase txid", %{details: details} do
       assert details.txid == "0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e68bebb44a74b1efd512098"
+    end
+
+    test "validated flag is true", %{details: details} do
+      assert details.validated == true
     end
   end
 end

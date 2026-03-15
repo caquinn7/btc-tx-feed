@@ -62,7 +62,7 @@ defmodule BtcTxFeedWeb.Layouts do
       </div>
     </header>
 
-    <main class="px-4 pt-6 pb-4 sm:px-6 lg:px-8 h-[calc(100vh-4rem)] overflow-hidden">
+    <main class="px-4 pt-6 pb-4 sm:px-6 lg:px-8 h-[calc(100vh-4rem)] overflow-y-auto">
       <div class="mx-auto max-w-7xl h-full">
         {render_slot(@inner_block)}
       </div>
