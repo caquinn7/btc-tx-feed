@@ -26,6 +26,13 @@ jobs:
       - name: Install dependencies
         run: mix deps.get
 
+      # btc_tx is a git dep with Gleam test files that import gleeunit (a dev
+      # dep of btc_tx in its gleam.toml). gleam.deps.get doesn't fetch dev deps
+      # of dependencies, so we download them explicitly before compilation so
+      # the Gleam compiler can resolve them when it compiles btc_tx's test files.
+      - name: Download Gleam deps for btc_tx
+        run: cd deps/btc_tx && gleam deps download
+
       # MIX_ENV=test is set only here, not globally.
       # mix deps.get (and the gleam.deps.get it triggers via the alias) must run
       # in the default dev env because mix_gleam builds Gleam artefacts into
