@@ -73,6 +73,7 @@ defmodule BtcTxFeed.MixProject do
       {:bandit, "~> 1.5"},
       {:mint_web_socket, "~> 1.0"},
       {:gleam_stdlib, "~> 0.44 or ~> 1.0"},
+      {:gleam_crypto, "~> 1.5"},
       {:gleeunit, "~> 1.0", only: [:dev, :test], runtime: false},
       {:btc_tx, git: "https://github.com/caquinn7/btc-tx.git", branch: "main"},
       {:ecto_sql, "~> 3.12"},
