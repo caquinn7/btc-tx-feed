@@ -28,6 +28,11 @@ btc_tx_feed-*.tar
 # Ignore assets that are produced by build tools.
 /priv/static/assets/
 
+# SQLite database files
+*.db
+*.db-shm
+*.db-wal
+
 # Ignore digested assets cache.
 /priv/static/cache_manifest.json
 

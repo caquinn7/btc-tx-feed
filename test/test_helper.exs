@@ -1,1 +1,11 @@
 ExUnit.start()
+
+db_path =
+  Application.fetch_env!(:btc_tx_feed, BtcTxFeed.Repo)
+  |> Keyword.fetch!(:database)
+
+File.rm(db_path)
+
+{:ok, _} = BtcTxFeed.Repo.start_link([])
+Ecto.Migrator.run(BtcTxFeed.Repo, :up, all: true)
+Ecto.Adapters.SQL.Sandbox.mode(BtcTxFeed.Repo, :manual)
