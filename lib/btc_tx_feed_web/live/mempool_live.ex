@@ -89,14 +89,14 @@ defmodule BtcTxFeedWeb.MempoolLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
+    <Layouts.app flash={@flash} current_path={~p"/"}>
       <div class="flex gap-6 h-full">
         <%!-- Left column: header + txid list --%>
         <div class="w-2/5 shrink-0 flex flex-col overflow-y-auto min-h-0">
           <%!-- Page header --%>
           <div class="mb-8">
             <div class="flex items-center gap-3 mb-1">
-              <h1 class="text-2xl font-bold tracking-tight">Live Mempool Feed</h1>
+              <h1 class="text-2xl font-bold tracking-tight">Mempool Feed</h1>
               <span class={[
                 "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium",
                 if(@connected,
@@ -143,16 +143,6 @@ defmodule BtcTxFeedWeb.MempoolLive do
                 )
               ]}
             >
-              <.icon
-                name="hero-arrow-right-circle"
-                class={[
-                  "size-4 shrink-0 transition-colors",
-                  if(tx.txid == @selected_txid,
-                    do: "text-orange-400",
-                    else: "text-orange-400/50 group-hover:text-orange-400"
-                  )
-                ]}
-              />
               <span class={[
                 "font-mono text-sm truncate transition-colors",
                 if(tx.txid == @selected_txid,
@@ -162,7 +152,16 @@ defmodule BtcTxFeedWeb.MempoolLive do
               ]}>
                 {tx.txid}
               </span>
-              <.icon name="hero-chevron-right" class="size-4 text-base-content/20 shrink-0 ml-auto" />
+              <.icon
+                name="hero-arrow-right-circle"
+                class={[
+                  "size-4 shrink-0 ml-auto transition-colors",
+                  if(tx.txid == @selected_txid,
+                    do: "text-orange-400",
+                    else: "text-orange-400/50 group-hover:text-orange-400"
+                  )
+                ]}
+              />
             </div>
           </div>
         </div>

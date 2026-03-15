@@ -12,16 +12,16 @@ defmodule BtcTxFeedWeb.FailuresLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
-      <div class="max-w-4xl mx-auto py-8">
+    <Layouts.app flash={@flash} current_path={~p"/analytics/failures"}>
+      <div class="max-w-4xl mx-auto">
         <%!-- Page header --%>
         <div class="mb-8">
           <div class="flex items-center gap-3 mb-1">
             <.link
               navigate={~p"/analytics"}
-              class="text-base-content/40 hover:text-base-content transition-colors"
+              class="text-base-content/50 hover:text-bitcoin transition-colors"
             >
-              <.icon name="hero-arrow-left" class="size-4" />
+              <.icon name="hero-arrow-left" class="text-xl" />
             </.link>
             <h1 class="text-2xl font-bold tracking-tight">Decode Failures</h1>
           </div>
