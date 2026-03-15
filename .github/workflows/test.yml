@@ -18,6 +18,7 @@ jobs:
         with:
           elixir-version: "1.19"
           otp-version: "28"
+          gleam-version: "1.14.0"
 
       - name: Install mix_gleam archive
         run: mix archive.install hex mix_gleam "~> 0.6.2" --force
