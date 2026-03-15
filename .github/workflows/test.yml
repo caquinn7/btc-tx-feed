@@ -6,9 +6,6 @@ on:
       - main
   pull_request:
 
-env:
-  MIX_ENV: test
-
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -28,8 +25,17 @@ jobs:
       - name: Install dependencies
         run: mix deps.get
 
+      # MIX_ENV=test is set only here, not globally.
+      # mix deps.get (and the gleam.deps.get it triggers via the alias) must run
+      # in the default dev env because mix_gleam builds Gleam artefacts into
+      # build/dev/. Setting MIX_ENV=test globally causes compile to look for
+      # those artefacts under build/test/, where they don't exist.
       - name: Compile
         run: mix compile --warnings-as-errors
+        env:
+          MIX_ENV: test
 
       - name: Run tests
         run: mix test
+        env:
+          MIX_ENV: test
