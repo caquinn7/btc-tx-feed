@@ -41,8 +41,8 @@ defmodule BtcTxFeedWeb.Layouts do
     ~H"""
     <header class="navbar px-4 sm:px-6 lg:px-8">
       <div class="flex-1 flex items-center gap-6">
-        <a
-          href="/"
+        <.link
+          navigate={~p"/"}
           class={[
             "flex w-fit items-center gap-2 transition-opacity",
             if(@current_path == "/",
@@ -66,7 +66,7 @@ defmodule BtcTxFeedWeb.Layouts do
             />
           </svg>
           <span class="text-lg">Mempool Feed</span>
-        </a>
+        </.link>
         <nav class="flex items-center gap-4">
           <.link
             navigate={~p"/analytics"}
@@ -97,7 +97,7 @@ defmodule BtcTxFeedWeb.Layouts do
         </nav>
       </div>
       <div class="flex-none">
-        <ul class="flex flex-column px-1 space-x-4 items-center">
+        <ul class="flex px-1 space-x-4 items-center">
           <li>
             <.theme_toggle />
           </li>
@@ -106,12 +106,11 @@ defmodule BtcTxFeedWeb.Layouts do
     </header>
 
     <main class="px-4 pt-6 sm:px-6 lg:px-8 h-[calc(100vh-4rem)] overflow-y-auto">
-      <div class="mx-auto max-w-7xl pb-8">
+      <div class="mx-auto max-w-7xl min-h-full pb-8">
         {render_slot(@inner_block)}
       </div>
     </main>
 
-    <footer class="mt-8"></footer>
     <.flash_group flash={@flash} />
     """
   end
