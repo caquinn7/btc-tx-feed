@@ -34,10 +34,10 @@ A new `/analytics` LiveView dashboard exposes both.
    config :btc_tx_feed, BtcTxFeed.Repo,
      database: System.get_env("DATABASE_PATH", "/data/btc_tx_feed.db")
    ```
-5. Add in-memory config to `config/test.exs`:
+5. Add test config to `config/test.exs` (file-backed DB required — `Ecto.Adapters.SQL.Sandbox` needs a persistent connection; `:memory:` is destroyed on connection close and loses the schema):
    ```
    config :btc_tx_feed, BtcTxFeed.Repo,
-     database: ":memory:",
+     database: Path.expand("../btc_tx_feed_test.db", __DIR__),
      pool: Ecto.Adapters.SQL.Sandbox
    ```
 6. Add `BtcTxFeed.Repo` to the ecto_repos list in `config/config.exs`.
@@ -71,7 +71,7 @@ A new `/analytics` LiveView dashboard exposes both.
     - `:segwit_count`, `:legacy_count`, `:coinbase_count`
     - `:validation_failure_count`
     - `{:version, v}` — e.g. `{:version, 2}`
-    - `{:script_type, type}` — e.g. `{:script_type, :p2tr}`, one counter per output seen
+    - `{:script_type, type}` — e.g. `{:script_type, :p2_t_r}`, one counter per output seen
     - `{:vsize_bucket, b}` — `:tiny` (<250), `:small` (250–500), `:medium` (500–1000), `:large` (1000–5000), `:oversized` (>5000)
     - `{:input_bucket, b}` — `:single` (1), `:few` (2–5), `:many` (>5)
     - `{:output_bucket, b}` — `:single` (1), `:few` (2–5), `:many` (>5)
@@ -189,7 +189,7 @@ A new `/analytics` LiveView dashboard exposes both.
 - `mix.exs` — add `ecto_sql` + `ecto_sqlite3` deps
 - `config/config.exs` — Repo config + ecto_repos
 - `config/runtime.exs` — production DATABASE_PATH override
-- `config/test.exs` — in-memory SQLite + Sandbox pool
+- `config/test.exs` — file-backed SQLite + Sandbox pool
 - `lib/btc_tx_feed/application.ex` — add Repo, TxStats, TxSampler to supervision tree
 - `lib/btc_tx_feed_web/router.ex` — add `/analytics` and `/analytics/failures` routes
 - `lib/btc_tx_feed/repo.ex` — **new**
@@ -212,5 +212,5 @@ A new `/analytics` LiveView dashboard exposes both.
 5. Navigate to `/analytics` — stats update every 2 seconds without full page reload.
 6. Navigate to `/analytics/failures` — renders (empty is fine if no failures yet).
 7. Manually insert a failure row via `FailureStore.insert(...)` in iex, confirm it appears in the UI.
-8. `mix test` passes (in-memory SQLite used in test env).
+8. `mix test` passes (file-backed SQLite with SQL Sandbox used in test env).
 9. `mix precommit` passes with no issues.
