@@ -32,23 +32,25 @@ Deploy this Phoenix 1.8 + Gleam app to Fly.io using a multi-stage Dockerfile and
 
    **Builder stage** (`FROM elixir:1.19-otp-28 AS builder`):
    - `apt-get install -y build-essential cmake git curl` (exqlite NIF needs gcc + cmake)
-   - Download and install Gleam v1.14.0 static Linux binary from GitHub releases into `/usr/local/bin`
+   - Download and install Gleam v1.14.0 static Linux binary from GitHub releases into `/usr/local/bin` — arch selected at build time via `$TARGETARCH` so native ARM64 (local) and x86_64 (Fly remote builder) both work without emulation
    - `mix archive.install hex mix_gleam "~> 0.6.2" --force`
    - `mix local.hex --force && mix local.rebar --force`
    - Set `MIX_ENV=prod`
-   - Copy `mix.exs` + `mix.lock`, run `mix deps.get --only prod`
-   - Pre-compile Gleam packages in order: `mix deps.compile gleam_stdlib gleam_crypto` (same ordering workaround as CI — prod env excludes gleeunit so only two packages needed)
+   - Copy `mix.exs` + `mix.lock`
+   - `sed` out the `only: [:dev, :test]` restriction on `gleeunit` — `btc_tx`'s Gleam test files import gleeunit, and mix_gleam compiles all Gleam files in the dep including test files; gleeunit is `runtime: false` so it never enters the release
+   - Run `mix deps.get`
+   - Pre-compile Gleam packages in order: `mix deps.compile gleam_stdlib gleam_crypto gleeunit` (same ordering workaround as CI)
    - `mix deps.compile`
    - Copy `config/`, `priv/`, `lib/`, `assets/`
+   - `mix compile` (must run before `mix assets.deploy` — the Phoenix LiveView compiler generates the `phoenix-colocated/btc_tx_feed` package that esbuild resolves)
    - `mix assets.deploy` (tailwind minify + esbuild minify + phx.digest)
-   - `mix compile`
    - `mix release`
 
-   **Runner stage** (`FROM debian:bookworm-slim`):
-   - `apt-get install -y libstdc++6 openssl ca-certificates libncurses5` (ERTS runtime deps)
+   **Runner stage** (`FROM debian:trixie-slim`):
+   - `apt-get install -y libstdc++6 openssl ca-certificates libncurses6` (ERTS runtime deps; trixie uses libncurses6)
    - Copy `/app/_build/prod/rel/btc_tx_feed` from builder
    - `ENV PHX_SERVER=true`
-   - `CMD ["/app/bin/server"]`
+   - `CMD ["/app/bin/btc_tx_feed", "start"]`
 
 ---
 
@@ -57,6 +59,7 @@ Deploy this Phoenix 1.8 + Gleam app to Fly.io using a multi-stage Dockerfile and
 4. **Create `fly.toml`** with:
    - `app` name matching what `fly launch` assigns
    - `primary_region = "dfw"`
+   - `[deploy]` — `release_command = "/app/bin/btc_tx_feed eval 'BtcTxFeed.Release.migrate()'"` — Fly runs this in a temporary instance of the new image before cutting traffic; if it exits non-zero the deploy is aborted and the old version keeps running
    - `[http_service]` — `internal_port = 4000`, `force_https = true`
    - Health check at `/`
    - `[[vm]]` — `size = "shared-cpu-1x"`
@@ -87,13 +90,10 @@ Deploy this Phoenix 1.8 + Gleam app to Fly.io using a multi-stage Dockerfile and
 
 ---
 
-## Phase 6 — First deploy and migrate
+## Phase 6 — First deploy
 
 10. Push to `main` — CI runs tests, on success fly-deploy.yml triggers `flyctl deploy --remote-only`
-11. Run Ecto migrations (first deploy only):
-    ```
-    fly ssh console -C "/app/bin/btc_tx_feed eval 'BtcTxFeed.Release.migrate()'"
-    ```
+11. Fly automatically runs migrations via the `release_command` in `fly.toml` before the new container goes live. No manual step needed.
 
 ---
 
@@ -107,8 +107,11 @@ Deploy this Phoenix 1.8 + Gleam app to Fly.io using a multi-stage Dockerfile and
 ## Decisions / scope
 
 - SQLite on a persistent volume (already configured in runtime.exs at `/data/btc_tx_feed.db`) — no Postgres needed
-- Using `debian:bookworm-slim` runner (not Alpine) to avoid musl/glibc friction with exqlite NIF
-- Gleam binary installed via curl in builder (mirrors CI's `erlef/setup-beam` approach, avoids version mismatch from Gleam base image)
+- Using `debian:trixie-slim` runner — matches the glibc version (2.38) of the `elixir:1.19-otp-28` builder image; bookworm only has glibc 2.36 which causes ERTS startup failures
+- Gleam binary installed via curl in builder with `$TARGETARCH`-based arch selection — native ARM64 locally, x86_64 on Fly's remote builder, no Rosetta emulation needed
+- `gleeunit` made visible to prod via `sed` on `mix.exs` — `btc_tx`'s Gleam test files import it; it is `runtime: false` so it never enters the release
+- `mix compile` runs before `mix assets.deploy` — the Phoenix LiveView compiler must generate the `phoenix-colocated/btc_tx_feed` package before esbuild can bundle it
+- `CMD` uses `/app/bin/btc_tx_feed start` directly with `ENV PHX_SERVER=true` — the `server` overlay script is not used
 - No custom health check endpoint added — using default `/` for now
 - Single Fly machine (no clustering) — `DNS_CLUSTER_QUERY` not set
-- Migrations run manually via SSH console on first deploy (not automated in release boot)
+- Migrations automated via `[deploy] release_command` in fly.toml — Fly runs migrations in a temporary instance of the new image before cutting traffic; failed migrations abort the deploy
