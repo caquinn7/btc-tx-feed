@@ -27,17 +27,21 @@ jobs:
         run: mix deps.get
 
       # btc_tx is a git dep with Gleam test files that import gleeunit (a dev
-      # dep of btc_tx in its gleam.toml). gleam.deps.get doesn't fetch dev deps
-      # of dependencies, so we download them explicitly before compilation so
-      # the Gleam compiler can resolve them when it compiles btc_tx's test files.
-      - name: Download Gleam deps for btc_tx
-        run: cd deps/btc_tx && gleam deps download
+      # dep of btc_tx in its gleam.toml). During a full clean compile, Mix skips
+      # the Gleam compiler step for gleeunit because it has pre-compiled .erl
+      # files in src/, so _build/test/lib/gleeunit/_gleam_artefacts/ never gets
+      # created. btc_tx's Gleam compilation then fails because it can't find
+      # gleeunit. Pre-compiling all three Gleam packages in dependency order
+      # ensures their _gleam_artefacts are in place before btc_tx compiles.
+      - name: Pre-compile Gleam packages
+        run: mix deps.compile gleam_stdlib gleam_crypto gleeunit
+        env:
+          MIX_ENV: test
 
-      # MIX_ENV=test is set only here, not globally.
-      # mix deps.get (and the gleam.deps.get it triggers via the alias) must run
-      # in the default dev env because mix_gleam builds Gleam artefacts into
-      # build/dev/. Setting MIX_ENV=test globally causes compile to look for
-      # those artefacts under build/test/, where they don't exist.
+      # MIX_ENV=test is set only for compile and test — not globally — because
+      # mix deps.get (and gleam.deps.get via the alias) must run in the default
+      # dev env. mix_gleam builds Gleam artefacts into build/dev/erlang/ inside
+      # each dep and those paths are env-specific.
       - name: Compile
         run: mix compile --warnings-as-errors
         env:
