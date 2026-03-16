@@ -1,0 +1,27 @@
+# app name is set by `fly launch` — update this before deploying
+app = "btc-tx-feed"
+primary_region = "dfw"
+
+[deploy]
+  release_command = "/app/bin/btc_tx_feed eval 'BtcTxFeed.Release.migrate()'"
+
+[http_service]
+  internal_port = 4000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    timeout = "5s"
+    path = "/"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"
+
+[mounts]
+  source = "btc_tx_feed_data"
+  destination = "/data"
