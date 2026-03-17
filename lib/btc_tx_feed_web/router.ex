@@ -22,6 +22,10 @@ defmodule BtcTxFeedWeb.Router do
     live "/analytics/failures", FailuresLive
   end
 
+  scope "/health" do
+    get "/", BtcTxFeedWeb.HealthController, :check
+  end
+
   # Other scopes may use custom stacks.
   # scope "/api", BtcTxFeedWeb do
   #   pipe_through :api
