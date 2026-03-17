@@ -8,6 +8,8 @@ defmodule BtcTxFeed.Application do
 
   @impl true
   def start(_type, _args) do
+    maybe_migrate()
+
     children =
       [
         BtcTxFeedWeb.Telemetry,
@@ -34,6 +36,14 @@ defmodule BtcTxFeed.Application do
   def config_change(changed, _new, removed) do
     BtcTxFeedWeb.Endpoint.config_change(changed, removed)
     :ok
+  end
+
+  defp maybe_migrate do
+    if System.get_env("RELEASE_NAME") do
+      for repo <- Application.fetch_env!(:btc_tx_feed, :ecto_repos) do
+        {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, all: true))
+      end
+    end
   end
 
   defp analytics_children do

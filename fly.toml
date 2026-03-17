@@ -5,9 +5,6 @@ primary_region = "dfw"
 [env]
   PHX_HOST = "btc-tx-feed.fly.dev"
 
-[deploy]
-  release_command = "/app/bin/btc_tx_feed eval 'BtcTxFeed.Release.migrate()'"
-
 [http_service]
   internal_port = 4000
   force_https = true
