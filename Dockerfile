@@ -5,8 +5,8 @@ WORKDIR /app
 
 # Install system build tools; exqlite NIF requires gcc + cmake
 RUN apt-get update -y && \
-    apt-get install -y build-essential cmake git curl && \
-    apt-get clean && rm -f /var/lib/apt/lists/*_*
+    apt-get install -y --no-install-recommends build-essential cmake git curl && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install Gleam v1.14.0 static Linux binary — arch is injected by BuildKit
 ARG TARGETARCH
@@ -65,8 +65,8 @@ WORKDIR /app
 
 # ERTS runtime dependencies + exqlite NIF runtime
 RUN apt-get update -y && \
-    apt-get install -y libstdc++6 openssl ca-certificates libncurses6 && \
-    apt-get clean && rm -f /var/lib/apt/lists/*_*
+    apt-get install -y --no-install-recommends libstdc++6 openssl ca-certificates libncurses6 && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app/_build/prod/rel/btc_tx_feed ./
 
