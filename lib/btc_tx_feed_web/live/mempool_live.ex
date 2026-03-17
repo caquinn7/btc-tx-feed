@@ -90,128 +90,133 @@ defmodule BtcTxFeedWeb.MempoolLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_path={~p"/"}>
-      <div class="flex gap-6 h-full">
-        <%!-- Left column: header + txid list --%>
-        <div class="w-2/5 shrink-0 flex flex-col overflow-y-auto min-h-0">
-          <%!-- Page header --%>
-          <div class="mb-8">
-            <div class="flex items-center gap-3 mb-1">
-              <h1 class="text-2xl font-bold tracking-tight">Mempool Feed</h1>
+      <div class="flex flex-col h-full">
+        <%!-- Page header --%>
+        <div class="mb-8">
+          <div class="flex items-center gap-3 mb-1">
+            <h1 class="text-2xl font-bold tracking-tight">Mempool Feed</h1>
+            <span class={[
+              "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium",
+              if(@connected,
+                do: "bg-green-500/15 text-green-400",
+                else: "bg-yellow-500/15 text-yellow-400"
+              )
+            ]}>
               <span class={[
-                "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium",
-                if(@connected,
-                  do: "bg-green-500/15 text-green-400",
-                  else: "bg-yellow-500/15 text-yellow-400"
-                )
-              ]}>
-                <span class={[
-                  "size-1.5 rounded-full",
-                  if(@connected, do: "bg-green-400 animate-pulse", else: "bg-yellow-400")
-                ]} />
-                {if @connected, do: "Live", else: "Connecting…"}
-              </span>
-            </div>
-            <p class="text-sm text-base-content/50">
-              New transactions entering the Bitcoin mempool in real time.
-            </p>
+                "size-1.5 rounded-full",
+                if(@connected, do: "bg-green-400 animate-pulse", else: "bg-yellow-400")
+              ]} />
+              {if @connected, do: "Live", else: "Connecting…"}
+            </span>
           </div>
-
-          <%!-- Stats bar --%>
-          <div class="flex items-center justify-between mb-4 text-xs text-base-content/40 font-mono">
-            <span>Click a txid to inspect it</span>
-          </div>
-
-          <%!-- Transaction list --%>
-          <div id="transactions" phx-update="stream" class="flex flex-col gap-1">
-            <%!-- Empty state (only shown when stream is empty) --%>
-            <div
-              id="txids-empty-state"
-              class="hidden only:block text-center text-sm text-base-content/40 py-16"
-            >
-              Waiting for transactions…
-            </div>
-            <div
-              :for={{id, tx} <- @streams.txids}
-              id={id}
-              phx-click="clicked_txid"
-              phx-value-txid={tx.txid}
-              class={[
-                "group flex items-center gap-3 rounded-lg border px-4 py-3 transition-colors cursor-pointer",
-                if(tx.txid == @selected_txid,
-                  do: "border-orange-500/40 bg-orange-500/10 ring-1 ring-orange-500/20",
-                  else: "border-base-300 bg-base-200 hover:bg-base-300"
-                )
-              ]}
-            >
-              <span class={[
-                "font-mono text-sm truncate transition-colors",
-                if(tx.txid == @selected_txid,
-                  do: "text-base-content",
-                  else: "text-base-content/80 group-hover:text-base-content"
-                )
-              ]}>
-                {tx.txid}
-              </span>
-              <.icon
-                name="hero-arrow-right-circle"
-                class={[
-                  "size-4 shrink-0 ml-auto transition-colors",
-                  if(tx.txid == @selected_txid,
-                    do: "text-orange-400",
-                    else: "text-orange-400/50 group-hover:text-orange-400"
-                  )
-                ]}
-              />
-            </div>
-          </div>
+          <p class="text-sm text-base-content/50">
+            New transactions entering the Bitcoin mempool in real time.
+          </p>
         </div>
 
-        <%!-- Right column: details panel --%>
-        <div class="flex-1 min-w-0 overflow-y-auto min-h-0">
-          <%= cond do %>
-            <% @tx_details == nil -> %>
+        <%!-- Two-column layout --%>
+        <div class="flex gap-6 flex-1 min-h-0">
+          <%!-- Left column: txid list --%>
+          <div class="w-2/5 shrink-0 flex flex-col overflow-y-auto min-h-0">
+            <%!-- Stats bar --%>
+            <div class="flex items-center justify-between mb-4 text-xs text-base-content/40 font-mono">
+              <span>Click a txid to inspect it</span>
+            </div>
+
+            <%!-- Transaction list --%>
+            <div id="transactions" phx-update="stream" class="flex flex-col gap-1">
+              <%!-- Empty state (only shown when stream is empty) --%>
               <div
-                id="tx-empty-state"
-                class="flex flex-col items-center justify-center h-full py-32 text-center"
+                id="txids-empty-state"
+                class="hidden only:block text-center text-sm text-base-content/40 py-16"
               >
-                <div class="rounded-full bg-base-200 p-6 mb-4">
-                  <.icon name="hero-magnifying-glass" class="size-8 text-base-content/20" />
-                </div>
-                <p class="text-sm font-medium text-base-content/40">
-                  Select a transaction to inspect it
-                </p>
-                <p class="text-xs text-base-content/25 mt-1">
-                  Click any txid in the list on the left
-                </p>
+                Waiting for transactions…
               </div>
-            <% @tx_details == :loading -> %>
-              <div id="tx-loading-state" class="rounded-xl border border-base-300 bg-base-200 p-6">
-                <div class="flex items-center gap-3 mb-4">
-                  <div class="size-4 rounded-full border-2 border-orange-400/30 border-t-orange-400 animate-spin shrink-0" />
-                  <span class="text-sm text-base-content/60">Decoding transaction…</span>
-                </div>
-                <p class="font-mono text-xs text-base-content/40 break-all mb-6">{@selected_txid}</p>
-                <div class="space-y-2.5 animate-pulse">
-                  <div class="h-3 bg-base-300 rounded w-full" />
-                  <div class="h-3 bg-base-300 rounded w-4/5" />
-                  <div class="h-3 bg-base-300 rounded w-3/5" />
-                  <div class="h-3 bg-base-300 rounded w-full" />
-                  <div class="h-3 bg-base-300 rounded w-2/3" />
-                </div>
+              <div
+                :for={{id, tx} <- @streams.txids}
+                id={id}
+                phx-click="clicked_txid"
+                phx-value-txid={tx.txid}
+                class={[
+                  "group flex items-center gap-3 rounded-lg border px-4 py-3 transition-colors cursor-pointer",
+                  if(tx.txid == @selected_txid,
+                    do: "border-orange-500/40 bg-orange-500/10 ring-1 ring-orange-500/20",
+                    else: "border-base-300 bg-base-200 hover:bg-base-300"
+                  )
+                ]}
+              >
+                <span class={[
+                  "font-mono text-sm truncate transition-colors",
+                  if(tx.txid == @selected_txid,
+                    do: "text-base-content",
+                    else: "text-base-content/80 group-hover:text-base-content"
+                  )
+                ]}>
+                  {tx.txid}
+                </span>
+                <.icon
+                  name="hero-arrow-right-circle"
+                  class={[
+                    "size-4 shrink-0 ml-auto transition-colors",
+                    if(tx.txid == @selected_txid,
+                      do: "text-orange-400",
+                      else: "text-orange-400/50 group-hover:text-orange-400"
+                    )
+                  ]}
+                />
               </div>
-            <% match?({:error, _}, @tx_details) -> %>
-              <div id="tx-error-state" class="rounded-xl border border-red-500/20 bg-red-500/5 p-6">
-                <div class="flex items-center gap-3 mb-3">
-                  <.icon name="hero-exclamation-triangle" class="size-5 text-red-400 shrink-0" />
-                  <span class="text-sm font-semibold text-red-400">Failed to load transaction</span>
+            </div>
+          </div>
+
+          <%!-- Right column: details panel --%>
+          <div class="flex-1 min-w-0 overflow-y-auto min-h-0 pt-8">
+            <%= cond do %>
+              <% @tx_details == nil -> %>
+                <div
+                  id="tx-empty-state"
+                  class="flex flex-col items-center justify-center h-full py-32 text-center"
+                >
+                  <div class="rounded-full bg-base-200 p-6 mb-4">
+                    <.icon name="hero-magnifying-glass" class="size-8 text-base-content/20" />
+                  </div>
+                  <p class="text-sm font-medium text-base-content/40">
+                    Select a transaction to inspect it
+                  </p>
+                  <p class="text-xs text-base-content/25 mt-1">
+                    Click any txid in the list on the left
+                  </p>
                 </div>
-                <p class="font-mono text-xs text-base-content/50 break-all">
-                  {inspect(elem(@tx_details, 1))}
-                </p>
-              </div>
-            <% true -> %>
-              <.tx_details_card details={elem(@tx_details, 1)} />
-          <% end %>
+              <% @tx_details == :loading -> %>
+                <div id="tx-loading-state" class="rounded-xl border border-base-300 bg-base-200 p-6">
+                  <div class="flex items-center gap-3 mb-4">
+                    <div class="size-4 rounded-full border-2 border-orange-400/30 border-t-orange-400 animate-spin shrink-0" />
+                    <span class="text-sm text-base-content/60">Decoding transaction…</span>
+                  </div>
+                  <p class="font-mono text-xs text-base-content/40 break-all mb-6">
+                    {@selected_txid}
+                  </p>
+                  <div class="space-y-2.5 animate-pulse">
+                    <div class="h-3 bg-base-300 rounded w-full" />
+                    <div class="h-3 bg-base-300 rounded w-4/5" />
+                    <div class="h-3 bg-base-300 rounded w-3/5" />
+                    <div class="h-3 bg-base-300 rounded w-full" />
+                    <div class="h-3 bg-base-300 rounded w-2/3" />
+                  </div>
+                </div>
+              <% match?({:error, _}, @tx_details) -> %>
+                <div id="tx-error-state" class="rounded-xl border border-red-500/20 bg-red-500/5 p-6">
+                  <div class="flex items-center gap-3 mb-3">
+                    <.icon name="hero-exclamation-triangle" class="size-5 text-red-400 shrink-0" />
+                    <span class="text-sm font-semibold text-red-400">Failed to load transaction</span>
+                  </div>
+                  <p class="font-mono text-xs text-base-content/50 break-all">
+                    {inspect(elem(@tx_details, 1))}
+                  </p>
+                </div>
+              <% true -> %>
+                <.tx_details_card details={elem(@tx_details, 1)} />
+            <% end %>
+          </div>
         </div>
       </div>
     </Layouts.app>
