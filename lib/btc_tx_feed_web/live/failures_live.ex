@@ -49,9 +49,9 @@ defmodule BtcTxFeedWeb.FailuresLive do
               <div class="flex items-start justify-between gap-4 mb-2">
                 <div class="space-y-1 min-w-0">
                   <%!-- Txid (truncated) --%>
-                  <p class="font-mono text-sm text-base-content/80 truncate">
+                  <p class="font-mono text-sm text-base-content/80 break-all">
                     <%= if failure.txid do %>
-                      {String.slice(failure.txid, 0, 16)}&hellip;{String.slice(failure.txid, -8, 8)}
+                      {failure.txid}
                     <% else %>
                       <span class="text-base-content/30 italic">txid unavailable</span>
                     <% end %>
