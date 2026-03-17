@@ -33,12 +33,6 @@ ENV MIX_ENV=prod
 # Fetch dependencies (copy manifests first to maximise layer cache)
 COPY mix.exs mix.lock ./
 
-# btc_tx's Gleam test files import gleeunit. mix_gleam builds its package
-# manifest from the active env's dep list, so gleeunit must be visible in prod
-# for the Gleam compiler to resolve `import gleeunit` when compiling btc_tx.
-# gleeunit is runtime: false so it is never included in the release.
-RUN sed -i 's/only: \[:dev, :test\], runtime: false/runtime: false/' mix.exs
-
 RUN mix deps.get
 
 # Pre-compile Gleam packages in dependency order (same workaround as CI)
