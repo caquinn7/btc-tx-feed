@@ -209,6 +209,9 @@ defmodule BtcTxFeedWeb.MempoolLive do
                     <.icon name="hero-exclamation-triangle" class="size-5 text-red-400 shrink-0" />
                     <span class="text-sm font-semibold text-red-400">Failed to load transaction</span>
                   </div>
+                  <p class="font-mono text-xs text-base-content/40 break-all mb-3">
+                    txid {@selected_txid}
+                  </p>
                   <p class="font-mono text-xs text-base-content/50 break-all">
                     {inspect(elem(@tx_details, 1))}
                   </p>
