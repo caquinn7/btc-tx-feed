@@ -12,11 +12,16 @@ RUN apt-get update -y && \
 ARG TARGETARCH
 RUN if [ "$TARGETARCH" = "arm64" ]; then \
       GLEAM_ARCH="aarch64-unknown-linux-musl"; \
+      GLEAM_SHA256="16371f8e3b45303d240758fe07f4adcb0fe444edf2f82312a24451323869730c"; \
     else \
       GLEAM_ARCH="x86_64-unknown-linux-musl"; \
+      GLEAM_SHA256="5dc66abbf3eb80f209f1c261ecfc44dc1404dd8ac503e483369d37182a4fcce8"; \
     fi && \
     curl -fsSL "https://github.com/gleam-lang/gleam/releases/download/v1.14.0/gleam-v1.14.0-${GLEAM_ARCH}.tar.gz" \
-    | tar -xz -C /usr/local/bin
+      -o /tmp/gleam.tar.gz && \
+    echo "${GLEAM_SHA256} */tmp/gleam.tar.gz" | sha256sum --check && \
+    tar -xz -C /usr/local/bin -f /tmp/gleam.tar.gz && \
+    rm /tmp/gleam.tar.gz
 
 # Install mix_gleam archive, hex, and rebar
 RUN mix archive.install hex mix_gleam "~> 0.6.2" --force && \
