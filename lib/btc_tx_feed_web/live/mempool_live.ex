@@ -95,7 +95,6 @@ defmodule BtcTxFeedWeb.MempoolLive do
         <%!-- Page header --%>
         <div class="mb-8">
           <div class="flex items-center gap-3 mb-1">
-            <h1 class="text-2xl font-bold tracking-tight">Mempool Feed</h1>
             <span class={[
               "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium",
               if(@connected,
@@ -109,10 +108,10 @@ defmodule BtcTxFeedWeb.MempoolLive do
               ]} />
               {if @connected, do: "Live", else: "Connecting…"}
             </span>
+            <p class="text-base-content">
+              New transactions entering the Bitcoin mempool in real time.
+            </p>
           </div>
-          <p class="text-sm text-base-content/50">
-            New transactions entering the Bitcoin mempool in real time.
-          </p>
         </div>
 
         <%!-- Two-column layout --%>

@@ -23,7 +23,9 @@ defmodule BtcTxFeedWeb.AnalyticsLive do
         <%!-- Page header --%>
         <div>
           <div class="flex items-center justify-between mb-1">
-            <h1 class="text-2xl font-bold tracking-tight">Analytics</h1>
+            <p class="text text-base-content">
+              Live aggregate stats from the background sampling pipeline. Resets on restart.
+            </p>
             <.link
               navigate={~p"/analytics/failures"}
               class="text-sm text-base-content/50 hover:text-bitcoin transition-colors"
@@ -33,9 +35,6 @@ defmodule BtcTxFeedWeb.AnalyticsLive do
                 else: "failures"} &rarr;
             </.link>
           </div>
-          <p class="text-sm text-base-content/50">
-            Live aggregate stats from the background sampling pipeline. Resets on restart.
-          </p>
         </div>
 
         <%!-- Pass rate --%>
