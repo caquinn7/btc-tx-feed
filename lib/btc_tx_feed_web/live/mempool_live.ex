@@ -175,16 +175,13 @@ defmodule BtcTxFeedWeb.MempoolLive do
                 <% @tx_details == nil -> %>
                   <div
                     id="tx-empty-state"
-                    class="flex flex-col items-center justify-center h-full py-32 text-center"
+                    class="flex flex-col items-center h-full py-32 text-center"
                   >
                     <div class="rounded-full bg-base-200 p-6 mb-4">
                       <.icon name="hero-magnifying-glass" class="size-8 text-base-content/20" />
                     </div>
                     <p class="text-sm font-medium text-base-content/40">
-                      Select a transaction to inspect it
-                    </p>
-                    <p class="text-xs text-base-content/25 mt-1">
-                      Click any txid in the list on the left
+                      Select a txid to inspect the transaction
                     </p>
                   </div>
                 <% @tx_details == :loading -> %>
