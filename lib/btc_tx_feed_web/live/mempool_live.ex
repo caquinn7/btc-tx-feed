@@ -90,7 +90,8 @@ defmodule BtcTxFeedWeb.MempoolLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_path={~p"/"}>
-      <div class="flex flex-col h-full">
+      <%!-- 7.5rem = header 4rem + main pt-6 1.5rem + layout pb-8 2rem --%>
+      <div class="flex flex-col h-[calc(100vh-7.5rem)]">
         <%!-- Page header --%>
         <div class="mb-8">
           <div class="flex items-center gap-3 mb-1">
@@ -115,7 +116,7 @@ defmodule BtcTxFeedWeb.MempoolLive do
         </div>
 
         <%!-- Two-column layout --%>
-        <div class="flex gap-6 flex-1 min-h-0">
+        <div class="flex gap-6 flex-1 min-h-0 overflow-hidden">
           <%!-- Left column: txid list --%>
           <div class="w-2/5 shrink-0 flex flex-col overflow-y-auto min-h-0">
             <%!-- Stats bar --%>
@@ -169,56 +170,63 @@ defmodule BtcTxFeedWeb.MempoolLive do
           </div>
 
           <%!-- Right column: details panel --%>
-          <div class="flex-1 min-w-0 overflow-y-auto min-h-0 pt-8">
-            <%= cond do %>
-              <% @tx_details == nil -> %>
-                <div
-                  id="tx-empty-state"
-                  class="flex flex-col items-center justify-center h-full py-32 text-center"
-                >
-                  <div class="rounded-full bg-base-200 p-6 mb-4">
-                    <.icon name="hero-magnifying-glass" class="size-8 text-base-content/20" />
+          <div class="flex-1 min-w-0 min-h-0 flex flex-col pt-8">
+            <div class="flex-1 min-h-0 overflow-y-auto">
+              <%= cond do %>
+                <% @tx_details == nil -> %>
+                  <div
+                    id="tx-empty-state"
+                    class="flex flex-col items-center justify-center h-full py-32 text-center"
+                  >
+                    <div class="rounded-full bg-base-200 p-6 mb-4">
+                      <.icon name="hero-magnifying-glass" class="size-8 text-base-content/20" />
+                    </div>
+                    <p class="text-sm font-medium text-base-content/40">
+                      Select a transaction to inspect it
+                    </p>
+                    <p class="text-xs text-base-content/25 mt-1">
+                      Click any txid in the list on the left
+                    </p>
                   </div>
-                  <p class="text-sm font-medium text-base-content/40">
-                    Select a transaction to inspect it
-                  </p>
-                  <p class="text-xs text-base-content/25 mt-1">
-                    Click any txid in the list on the left
-                  </p>
-                </div>
-              <% @tx_details == :loading -> %>
-                <div id="tx-loading-state" class="rounded-xl border border-base-300 bg-base-200 p-6">
-                  <div class="flex items-center gap-3 mb-4">
-                    <div class="size-4 rounded-full border-2 border-orange-400/30 border-t-orange-400 animate-spin shrink-0" />
-                    <span class="text-sm text-base-content/60">Decoding transaction…</span>
+                <% @tx_details == :loading -> %>
+                  <div id="tx-loading-state" class="rounded-xl border border-base-300 bg-base-200 p-6">
+                    <div class="flex items-center gap-3 mb-4">
+                      <div class="size-4 rounded-full border-2 border-orange-400/30 border-t-orange-400 animate-spin shrink-0" />
+                      <span class="text-sm text-base-content/60">Decoding transaction…</span>
+                    </div>
+                    <p class="font-mono text-xs text-base-content/40 break-all mb-6">
+                      {@selected_txid}
+                    </p>
+                    <div class="space-y-2.5 animate-pulse">
+                      <div class="h-3 bg-base-300 rounded w-full" />
+                      <div class="h-3 bg-base-300 rounded w-4/5" />
+                      <div class="h-3 bg-base-300 rounded w-3/5" />
+                      <div class="h-3 bg-base-300 rounded w-full" />
+                      <div class="h-3 bg-base-300 rounded w-2/3" />
+                    </div>
                   </div>
-                  <p class="font-mono text-xs text-base-content/40 break-all mb-6">
-                    {@selected_txid}
-                  </p>
-                  <div class="space-y-2.5 animate-pulse">
-                    <div class="h-3 bg-base-300 rounded w-full" />
-                    <div class="h-3 bg-base-300 rounded w-4/5" />
-                    <div class="h-3 bg-base-300 rounded w-3/5" />
-                    <div class="h-3 bg-base-300 rounded w-full" />
-                    <div class="h-3 bg-base-300 rounded w-2/3" />
+                <% match?({:error, _}, @tx_details) -> %>
+                  <div
+                    id="tx-error-state"
+                    class="rounded-xl border border-red-500/20 bg-red-500/5 p-6"
+                  >
+                    <div class="flex items-center gap-3 mb-3">
+                      <.icon name="hero-exclamation-triangle" class="size-5 text-red-400 shrink-0" />
+                      <span class="text-sm font-semibold text-red-400">
+                        Failed to load transaction
+                      </span>
+                    </div>
+                    <p class="font-mono text-xs text-base-content/40 break-all mb-3">
+                      txid {@selected_txid}
+                    </p>
+                    <p class="font-mono text-xs text-base-content/50 break-all">
+                      {inspect(elem(@tx_details, 1))}
+                    </p>
                   </div>
-                </div>
-              <% match?({:error, _}, @tx_details) -> %>
-                <div id="tx-error-state" class="rounded-xl border border-red-500/20 bg-red-500/5 p-6">
-                  <div class="flex items-center gap-3 mb-3">
-                    <.icon name="hero-exclamation-triangle" class="size-5 text-red-400 shrink-0" />
-                    <span class="text-sm font-semibold text-red-400">Failed to load transaction</span>
-                  </div>
-                  <p class="font-mono text-xs text-base-content/40 break-all mb-3">
-                    txid {@selected_txid}
-                  </p>
-                  <p class="font-mono text-xs text-base-content/50 break-all">
-                    {inspect(elem(@tx_details, 1))}
-                  </p>
-                </div>
-              <% true -> %>
-                <.tx_details_card details={elem(@tx_details, 1)} />
-            <% end %>
+                <% true -> %>
+                  <.tx_details_card details={elem(@tx_details, 1)} />
+              <% end %>
+            </div>
           </div>
         </div>
       </div>
