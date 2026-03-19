@@ -26,7 +26,7 @@ defmodule BtcTxFeedWeb.FailuresLive do
             <h1 class="text-2xl font-bold tracking-tight">Decode Failures</h1>
           </div>
           <p class="text-sm text-base-content/50 ml-7">
-            Last 50 transactions that failed to decode. Persisted across restarts.
+            Last 50 transactions that failed to decode.
           </p>
         </div>
 

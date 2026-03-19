@@ -24,7 +24,7 @@ defmodule BtcTxFeedWeb.AnalyticsLive do
         <div>
           <div class="flex items-center justify-between mb-1">
             <p class="text text-base-content">
-              Live aggregate stats from the background sampling pipeline. Resets on restart.
+              Live aggregate stats from the background sampling pipeline.
             </p>
             <.link
               navigate={~p"/analytics/failures"}
