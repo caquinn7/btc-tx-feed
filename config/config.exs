@@ -13,6 +13,8 @@ config :btc_tx_feed,
 
 config :btc_tx_feed, BtcTxFeed.Repo, database: Path.expand("../btc_tx_feed.db", __DIR__)
 
+config :btc_tx_feed, :tx_stats_snapshot_path, Path.expand("../tx_stats_snapshot.bin", __DIR__)
+
 # Configure the endpoint
 config :btc_tx_feed, BtcTxFeedWeb.Endpoint,
   url: [host: "localhost"],

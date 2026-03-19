@@ -8,6 +8,7 @@ defmodule BtcTxFeed.Application do
 
   @impl true
   def start(_type, _args) do
+    setup_signal_handlers()
     maybe_migrate()
 
     children =
@@ -44,6 +45,17 @@ defmodule BtcTxFeed.Application do
         {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, all: true))
       end
     end
+  end
+
+  defp setup_signal_handlers do
+    # Trap SIGTERM (sent by Fly.io and other process managers on graceful stop)
+    # to ensure the OTP shutdown sequence runs and TxStats flushes to disk.
+    # Note: SIGINT (Ctrl-C) is managed by the Erlang VM break handler and
+    # cannot be intercepted here — rely on the periodic flush for dev restarts.
+    System.trap_signal(:sigterm, :graceful_shutdown, fn ->
+      System.stop(0)
+      :ok
+    end)
   end
 
   defp analytics_children do

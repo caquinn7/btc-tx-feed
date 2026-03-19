@@ -32,3 +32,4 @@ config :btc_tx_feed, BtcTxFeed.Repo,
   pool: Ecto.Adapters.SQL.Sandbox
 
 config :btc_tx_feed, :start_analytics, false
+config :btc_tx_feed, :tx_stats_snapshot_path, nil
