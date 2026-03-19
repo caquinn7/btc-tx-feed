@@ -91,11 +91,11 @@ defmodule BtcTxFeedWeb.AnalyticsLive do
           </h2>
           <div class="space-y-2.5">
             <%= for {label, bucket} <- [
-              {"Tiny (<250)", :tiny},
-              {"Small (250–500)", :small},
-              {"Medium (500–1k)", :medium},
-              {"Large (1k–5k)", :large},
-              {"Oversized (>5k)", :oversized}
+              {"Tiny (< 250)", :tiny},
+              {"Small (250 - 500)", :small},
+              {"Medium (500 - 1k)", :medium},
+              {"Large (1k - 5k)", :large},
+              {"Oversized (> 5k)", :oversized}
             ] do %>
               <% count = Map.get(@stats, {:vsize_bucket, bucket}, 0) %>
               <% total = vsize_total(@stats) %>
@@ -227,7 +227,9 @@ defmodule BtcTxFeedWeb.AnalyticsLive do
     decoded = Map.get(stats, :total_decoded, 0)
     failed = Map.get(stats, :total_failed, 0)
     total = decoded + failed
-    if total == 0, do: 0, else: Float.round(decoded / total * 100, 1)
+
+    value = if total == 0, do: 0.0, else: Float.floor(decoded / total * 100, 2)
+    :erlang.float_to_binary(value * 1.0, decimals: 2)
   end
 
   defp failure_count(stats), do: Map.get(stats, :total_failed, 0)
