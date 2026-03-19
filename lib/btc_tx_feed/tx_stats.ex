@@ -123,8 +123,17 @@ defmodule BtcTxFeed.TxStats do
       path ->
         case File.read(path) do
           {:ok, binary} ->
-            entries = :erlang.binary_to_term(binary)
-            :ets.insert(@table, entries)
+            try do
+              entries = :erlang.binary_to_term(binary)
+              :ets.insert(@table, entries)
+            rescue
+              e ->
+                require Logger
+
+                Logger.warning(
+                  "TxStats: snapshot corrupt, starting fresh — #{Exception.message(e)}"
+                )
+            end
 
           {:error, :enoent} ->
             :ok
