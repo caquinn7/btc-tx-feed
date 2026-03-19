@@ -33,6 +33,10 @@ btc_tx_feed-*.tar
 *.db-shm
 *.db-wal
 
+# TxStats snapshot files
+/tx_stats_snapshot.bin
+/tx_stats_snapshot.bin.tmp
+
 # Ignore digested assets cache.
 /priv/static/cache_manifest.json
 
