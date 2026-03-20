@@ -17,7 +17,7 @@ defmodule BtcTxFeed.DecodePolicy do
     max_script_size: 10_000,
     max_witness_item_size: 10_000,
     max_witness_items_per_input: 10_000,
-    max_witness_stack_payload_bytes: 100_000
+    max_witness_stack_payload_size: 100_000
   }
 
   @doc "Returns the active policy as a map, merging app config over the defaults."
@@ -35,7 +35,7 @@ defmodule BtcTxFeed.DecodePolicy do
         :witness_policy,
         policy.max_witness_item_size,
         policy.max_witness_items_per_input,
-        policy.max_witness_stack_payload_bytes
+        policy.max_witness_stack_payload_size
       }
 
     {

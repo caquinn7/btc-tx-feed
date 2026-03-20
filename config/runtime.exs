@@ -33,8 +33,8 @@ config :btc_tx_feed, :decode_policy,
     String.to_integer(System.get_env("DECODE_POLICY_WITNESS_ITEM_SIZE", "10000")),
   max_witness_items_per_input:
     String.to_integer(System.get_env("DECODE_POLICY_WITNESS_ITEMS_PER_INPUT", "10000")),
-  max_witness_stack_payload_bytes:
-    String.to_integer(System.get_env("DECODE_POLICY_WITNESS_STACK_PAYLOAD_BYTES", "100000"))
+  max_witness_stack_payload_size:
+    String.to_integer(System.get_env("DECODE_POLICY_WITNESS_STACK_PAYLOAD_SIZE", "100000"))
 
 if config_env() == :prod do
   config :btc_tx_feed, BtcTxFeed.Repo,

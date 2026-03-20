@@ -20,7 +20,7 @@ be tuned on Fly.io via `fly secrets set` without a code change.
 | `DECODE_POLICY_MAX_SCRIPT_SIZE` | `10000` | `max_script_size` |
 | `DECODE_POLICY_WITNESS_ITEM_SIZE` | `10000` | witness `max_item_size` |
 | `DECODE_POLICY_WITNESS_ITEMS_PER_INPUT` | `10000` | witness `max_items_per_input` |
-| `DECODE_POLICY_WITNESS_STACK_PAYLOAD_BYTES` | `100000` | witness `max_stack_payload_bytes_per_input` |
+| `DECODE_POLICY_WITNESS_STACK_PAYLOAD_SIZE` | `100000` | witness `max_stack_payload_bytes_per_input` |
 
 Defaults match the `btc_tx` library defaults so that existing behaviour is
 unchanged unless a variable is explicitly set.
@@ -45,8 +45,8 @@ config :btc_tx_feed, :decode_policy,
     String.to_integer(System.get_env("DECODE_POLICY_WITNESS_ITEM_SIZE", "10000")),
   max_witness_items_per_input:
     String.to_integer(System.get_env("DECODE_POLICY_WITNESS_ITEMS_PER_INPUT", "10000")),
-  max_witness_stack_payload_bytes:
-    String.to_integer(System.get_env("DECODE_POLICY_WITNESS_STACK_PAYLOAD_BYTES", "100000"))
+  max_witness_stack_payload_size:
+    String.to_integer(System.get_env("DECODE_POLICY_WITNESS_STACK_PAYLOAD_SIZE", "100000"))
 ```
 
 Place this block outside the `if config_env() == :prod` guard so it applies in
@@ -65,7 +65,7 @@ defp decode_policy do
     {:witness_policy,
      Keyword.get(cfg, :max_witness_item_size, 10_000),
      Keyword.get(cfg, :max_witness_items_per_input, 10_000),
-     Keyword.get(cfg, :max_witness_stack_payload_bytes, 100_000)}
+     Keyword.get(cfg, :max_witness_stack_payload_size, 100_000)}
 
   {:decode_policy,
    Keyword.get(cfg, :max_vin_count, 100_000),

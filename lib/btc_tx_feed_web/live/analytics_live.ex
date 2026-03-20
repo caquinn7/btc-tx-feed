@@ -224,17 +224,22 @@ defmodule BtcTxFeedWeb.AnalyticsLive do
             Decode policy limits
           </h2>
           <div class="grid grid-cols-2 gap-x-8 gap-y-2">
-            <%= for {label, value} <- [
-              {"Max inputs", @decode_policy.max_vin_count},
-              {"Max outputs", @decode_policy.max_vout_count},
-              {"Max script size", @decode_policy.max_script_size},
-              {"Max witness item size", @decode_policy.max_witness_item_size},
-              {"Max witness items / input", @decode_policy.max_witness_items_per_input},
-              {"Max witness stack bytes", @decode_policy.max_witness_stack_payload_bytes}
+            <%= for {label, value, unit} <- [
+              {"Max inputs", @decode_policy.max_vin_count, :count},
+              {"Max outputs", @decode_policy.max_vout_count, :count},
+              {"Max script size", @decode_policy.max_script_size, :bytes},
+              {"Max witness item size", @decode_policy.max_witness_item_size, :bytes},
+              {"Max witness items / input", @decode_policy.max_witness_items_per_input, :count},
+              {"Max witness stack size", @decode_policy.max_witness_stack_payload_size, :bytes}
             ] do %>
               <div class="flex items-baseline justify-between py-1.5 border-b border-base-300 last:border-0">
                 <span class="text-xs text-base-content/60">{label}</span>
-                <span class="font-mono text-xs text-base-content/80">{value}</span>
+                <span class="font-mono text-xs text-base-content/80">
+                  {value}
+                  <%= if unit == :bytes do %>
+                    <span class="text-base-content/35">B</span>
+                  <% end %>
+                </span>
               </div>
             <% end %>
           </div>
