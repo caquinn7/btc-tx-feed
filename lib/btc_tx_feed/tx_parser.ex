@@ -9,7 +9,8 @@ defmodule BtcTxFeed.TxParser do
   `{:error, reason}`.
   """
   def parse(raw_bytes) when is_binary(raw_bytes) do
-    with {:ok, tx} <- :btc_tx.decode(raw_bytes) do
+    with {:ok, tx} <-
+           :btc_tx.decode_with_policy(raw_bytes, BtcTxFeed.DecodePolicy.to_btc_tx_policy()) do
       {:ok, build_details(tx)}
     end
   end
