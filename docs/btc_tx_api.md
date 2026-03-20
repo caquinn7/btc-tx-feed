@@ -317,7 +317,7 @@ following field values:
 
 | Field | Default | Description |
 |---|---|---|
-| `max_item_size` | `100` | Maximum bytes for any single witness item |
+| `max_item_size` | `10_000` | Maximum bytes for any single witness item |
 | `max_items_per_input` | `10_000` | Maximum witness stack items per input |
 | `max_stack_payload_bytes_per_input` | `100_000` | Maximum total witness bytes per input |
 

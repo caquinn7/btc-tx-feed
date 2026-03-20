@@ -23,6 +23,17 @@ end
 config :btc_tx_feed, BtcTxFeedWeb.Endpoint,
   http: [port: String.to_integer(System.get_env("PORT", "4000"))]
 
+config :btc_tx_feed, :decode_policy,
+  max_vin_count: String.to_integer(System.get_env("DECODE_POLICY_MAX_VIN_COUNT", "100000")),
+  max_vout_count: String.to_integer(System.get_env("DECODE_POLICY_MAX_VOUT_COUNT", "100000")),
+  max_script_size: String.to_integer(System.get_env("DECODE_POLICY_MAX_SCRIPT_SIZE", "10000")),
+  max_witness_item_size:
+    String.to_integer(System.get_env("DECODE_POLICY_WITNESS_ITEM_SIZE", "10000")),
+  max_witness_items_per_input:
+    String.to_integer(System.get_env("DECODE_POLICY_WITNESS_ITEMS_PER_INPUT", "10000")),
+  max_witness_stack_payload_bytes:
+    String.to_integer(System.get_env("DECODE_POLICY_WITNESS_STACK_PAYLOAD_BYTES", "100000"))
+
 if config_env() == :prod do
   config :btc_tx_feed, BtcTxFeed.Repo,
     database: System.get_env("DATABASE_PATH", "/data/btc_tx_feed.db")
