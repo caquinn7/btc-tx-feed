@@ -23,6 +23,8 @@ end
 config :btc_tx_feed, BtcTxFeedWeb.Endpoint,
   http: [port: String.to_integer(System.get_env("PORT", "4000"))]
 
+# Decode policy resource limits for btc_tx parsing.
+# Default values here must match the defaults in BtcTxFeed.DecodePolicy.
 config :btc_tx_feed, :decode_policy,
   max_vin_count: String.to_integer(System.get_env("DECODE_POLICY_MAX_VIN_COUNT", "100000")),
   max_vout_count: String.to_integer(System.get_env("DECODE_POLICY_MAX_VOUT_COUNT", "100000")),

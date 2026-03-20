@@ -9,7 +9,8 @@ defmodule BtcTxFeed.TxParser do
   `{:error, reason}`.
   """
   def parse(raw_bytes) when is_binary(raw_bytes) do
-    with {:ok, tx} <- :btc_tx.decode_with_policy(raw_bytes, decode_policy()) do
+    with {:ok, tx} <-
+           :btc_tx.decode_with_policy(raw_bytes, BtcTxFeed.DecodePolicy.to_btc_tx_policy()) do
       {:ok, build_details(tx)}
     end
   end
@@ -17,19 +18,6 @@ defmodule BtcTxFeed.TxParser do
   # ---------------------------------------------------------------------------
   # Private helpers
   # ---------------------------------------------------------------------------
-
-  defp decode_policy do
-    cfg = Application.get_env(:btc_tx_feed, :decode_policy, [])
-
-    witness_policy =
-      {:witness_policy, Keyword.get(cfg, :max_witness_item_size, 10_000),
-       Keyword.get(cfg, :max_witness_items_per_input, 10_000),
-       Keyword.get(cfg, :max_witness_stack_payload_bytes, 100_000)}
-
-    {:decode_policy, Keyword.get(cfg, :max_vin_count, 100_000),
-     Keyword.get(cfg, :max_vout_count, 100_000), Keyword.get(cfg, :max_script_size, 10_000),
-     witness_policy}
-  end
 
   defp build_details(tx) do
     is_segwit = :btc_tx.is_segwit(tx)
