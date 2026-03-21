@@ -11,6 +11,7 @@ defmodule BtcTxFeedWeb.AnalyticsLive do
     {:ok,
      socket
      |> assign(:stats, TxStats.get())
+     |> assign(:session_id, TxStats.get_session_id())
      |> assign(:decode_policy, decode_policy_assigns())}
   end
 
@@ -33,7 +34,7 @@ defmodule BtcTxFeedWeb.AnalyticsLive do
             <div class="flex items-center gap-4">
               <% failed = Map.get(@stats, :total_failed, 0) %>
               <.link
-                navigate={~p"/analytics/failures"}
+                navigate={~p"/analytics/failures?session_id=#{@session_id}"}
                 class="text-sm text-base-content/50 hover:text-bitcoin transition-colors"
               >
                 {failed} decode {if failed == 1, do: "failure", else: "failures"} &rarr;
