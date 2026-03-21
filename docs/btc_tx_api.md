@@ -308,37 +308,29 @@ following field values:
 
 | Field | Default | Description |
 |---|---|---|
+| `max_tx_size` | `400_000` | Maximum serialized transaction size in bytes; enforced before parsing begins |
 | `max_vin_count` | `100_000` | Maximum number of inputs |
 | `max_vout_count` | `100_000` | Maximum number of outputs |
-| `max_script_size` | `10_000` | Maximum bytes for any single script |
-| `witness_policy` | *(see below)* | Witness-specific limits |
-
-### `default_witness_policy`
-
-| Field | Default | Description |
-|---|---|---|
-| `max_item_size` | `10_000` | Maximum bytes for any single witness item |
-| `max_items_per_input` | `10_000` | Maximum witness stack items per input |
-| `max_stack_payload_bytes_per_input` | `100_000` | Maximum total witness bytes per input |
+| `max_script_size` | `10_000` | Maximum bytes for any single script (`scriptSig` or `scriptPubKey`) |
+| `max_witness_items_per_input` | `10_000` | Maximum witness stack items per input |
+| `max_witness_size_per_input` | `100_000` | Maximum total witness size in bytes per input |
 
 ### Constructing a custom policy from Elixir
 
-Both `DecodePolicy` and `WitnessPolicy` are Gleam records, which compile to
-tagged Erlang tuples. To construct one from Elixir:
+`DecodePolicy` is a Gleam record, which compiles to a tagged Erlang tuple. To
+construct one from Elixir:
 
 ```elixir
-witness_policy = {:witness_policy, 80, 100, 10_000}
-# {max_item_size, max_items_per_input, max_stack_payload_bytes_per_input}
-
-policy = {:decode_policy, 100, 100, 1_000, witness_policy}
-# {max_vin_count, max_vout_count, max_script_size, witness_policy}
+policy = {:decode_policy, 400_000, 100, 100, 1_000, 10_000, 10_000}
+# {max_tx_size, max_vin_count, max_vout_count, max_script_size,
+#  max_witness_items_per_input, max_witness_size_per_input}
 
 {:ok, tx} = :btc_tx.decode_with_policy(raw_bytes, policy)
 ```
 
 > **Note:** Field order in the tuple matches the order the fields are declared
 > in the Gleam source. When in doubt, use the accessor values on `default_policy`
-> and `default_witness_policy` as a reference.
+> as a reference.
 
 ---
 
