@@ -12,12 +12,12 @@ defmodule BtcTxFeed.DecodePolicy do
   """
 
   @defaults %{
+    max_tx_size: 400_000,
     max_vin_count: 100_000,
     max_vout_count: 100_000,
     max_script_size: 10_000,
-    max_witness_item_size: 10_000,
     max_witness_items_per_input: 10_000,
-    max_witness_stack_payload_size: 100_000
+    max_witness_size_per_input: 100_000
   }
 
   @doc "Returns the active policy as a map, merging app config over the defaults."
@@ -30,20 +30,14 @@ defmodule BtcTxFeed.DecodePolicy do
   def to_btc_tx_policy do
     policy = get()
 
-    witness =
-      {
-        :witness_policy,
-        policy.max_witness_item_size,
-        policy.max_witness_items_per_input,
-        policy.max_witness_stack_payload_size
-      }
-
     {
       :decode_policy,
+      policy.max_tx_size,
       policy.max_vin_count,
       policy.max_vout_count,
       policy.max_script_size,
-      witness
+      policy.max_witness_items_per_input,
+      policy.max_witness_size_per_input
     }
   end
 end

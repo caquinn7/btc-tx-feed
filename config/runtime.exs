@@ -26,15 +26,14 @@ config :btc_tx_feed, BtcTxFeedWeb.Endpoint,
 # Decode policy resource limits for btc_tx parsing.
 # Default values here must match the defaults in BtcTxFeed.DecodePolicy.
 config :btc_tx_feed, :decode_policy,
+  max_tx_size: String.to_integer(System.get_env("DECODE_POLICY_MAX_TX_SIZE", "400000")),
   max_vin_count: String.to_integer(System.get_env("DECODE_POLICY_MAX_VIN_COUNT", "100000")),
   max_vout_count: String.to_integer(System.get_env("DECODE_POLICY_MAX_VOUT_COUNT", "100000")),
   max_script_size: String.to_integer(System.get_env("DECODE_POLICY_MAX_SCRIPT_SIZE", "10000")),
-  max_witness_item_size:
-    String.to_integer(System.get_env("DECODE_POLICY_WITNESS_ITEM_SIZE", "10000")),
   max_witness_items_per_input:
     String.to_integer(System.get_env("DECODE_POLICY_WITNESS_ITEMS_PER_INPUT", "10000")),
-  max_witness_stack_payload_size:
-    String.to_integer(System.get_env("DECODE_POLICY_WITNESS_STACK_PAYLOAD_SIZE", "100000"))
+  max_witness_size_per_input:
+    String.to_integer(System.get_env("DECODE_POLICY_WITNESS_SIZE_PER_INPUT", "100000"))
 
 if config_env() == :prod do
   config :btc_tx_feed, BtcTxFeed.Repo,

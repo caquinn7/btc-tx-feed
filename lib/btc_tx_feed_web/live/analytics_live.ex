@@ -47,13 +47,13 @@ defmodule BtcTxFeedWeb.AnalyticsLive do
               Decode pass rate
             </h2>
             <span class="font-mono text-lg font-bold">
-              {pass_rate_pct(@stats)}%
+              {pass_rate_percentage(@stats)}%
             </span>
           </div>
           <div class="h-2.5 rounded-full bg-base-300 overflow-hidden">
             <div
               class="h-full rounded-full bg-green-500 transition-all duration-500"
-              style={"width: #{pass_rate_pct(@stats)}%"}
+              style={"width: #{pass_rate_percentage(@stats)}%"}
             />
           </div>
           <div class="flex justify-between mt-2 text-xs text-base-content/40 font-mono">
@@ -174,7 +174,7 @@ defmodule BtcTxFeedWeb.AnalyticsLive do
               Input count
             </h2>
             <div class="space-y-2.5">
-              <%= for {label, bucket} <- [{"Single", :single}, {"Few (2–5)", :few}, {"Many (>5)", :many}] do %>
+              <%= for {label, bucket} <- [{"Single", :single}, {"Few (2 - 5)", :few}, {"Many (> 5)", :many}] do %>
                 <% count = Map.get(@stats, {:input_bucket, bucket}, 0) %>
                 <% total = bucket_total(@stats, :input_bucket) %>
                 <div class="flex items-center gap-3">
@@ -198,7 +198,7 @@ defmodule BtcTxFeedWeb.AnalyticsLive do
               Output count
             </h2>
             <div class="space-y-2.5">
-              <%= for {label, bucket} <- [{"Single", :single}, {"Few (2–5)", :few}, {"Many (>5)", :many}] do %>
+              <%= for {label, bucket} <- [{"Single", :single}, {"Few (2 - 5)", :few}, {"Many (> 5)", :many}] do %>
                 <% count = Map.get(@stats, {:output_bucket, bucket}, 0) %>
                 <% total = bucket_total(@stats, :output_bucket) %>
                 <div class="flex items-center gap-3">
@@ -225,14 +225,14 @@ defmodule BtcTxFeedWeb.AnalyticsLive do
           </h2>
           <div class="grid grid-cols-2 gap-x-8 gap-y-2">
             <%= for {label, value, unit} <- [
+              {"Max tx size", @decode_policy.max_tx_size, :bytes},
               {"Max inputs", @decode_policy.max_vin_count, :count},
               {"Max outputs", @decode_policy.max_vout_count, :count},
               {"Max script size", @decode_policy.max_script_size, :bytes},
-              {"Max witness item size", @decode_policy.max_witness_item_size, :bytes},
               {"Max witness items / input", @decode_policy.max_witness_items_per_input, :count},
-              {"Max witness stack size", @decode_policy.max_witness_stack_payload_size, :bytes}
+              {"Max witness size / input", @decode_policy.max_witness_size_per_input, :bytes}
             ] do %>
-              <div class="flex items-baseline justify-between py-1.5 border-b border-base-300 last:border-0">
+              <div class="flex items-baseline justify-between py-1.5 border-b border-base-300">
                 <span class="text-xs text-base-content/60">{label}</span>
                 <span class="font-mono text-xs text-base-content/80">
                   {value}
@@ -253,7 +253,7 @@ defmodule BtcTxFeedWeb.AnalyticsLive do
   # Private helpers
   # ---------------------------------------------------------------------------
 
-  defp pass_rate_pct(stats) do
+  defp pass_rate_percentage(stats) do
     decoded = Map.get(stats, :total_decoded, 0)
     failed = Map.get(stats, :total_failed, 0)
     total = decoded + failed
