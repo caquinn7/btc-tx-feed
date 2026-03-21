@@ -3,17 +3,24 @@ defmodule BtcTxFeed.StatsSessions do
 
   alias BtcTxFeed.{Repo, StatsSession}
 
-  def archive!(counters_map, %DateTime{} = started_at, %DateTime{} = ended_at) do
+  def create_open!(%DateTime{} = started_at) do
+    Repo.insert!(%StatsSession{started_at: DateTime.truncate(started_at, :second)})
+  end
+
+  def finalize!(id, counters_map, %DateTime{} = ended_at) do
     total_decoded = Map.get(counters_map, :total_decoded, 0)
     total_failed = Map.get(counters_map, :total_failed, 0)
 
-    Repo.insert!(%StatsSession{
-      started_at: DateTime.truncate(started_at, :second),
-      ended_at: DateTime.truncate(ended_at, :second),
-      counters: :erlang.term_to_binary(counters_map),
-      total_decoded: total_decoded,
-      total_failed: total_failed
-    })
+    {1, _} =
+      Repo.update_all(
+        from(s in StatsSession, where: s.id == ^id),
+        set: [
+          ended_at: DateTime.truncate(ended_at, :second),
+          counters: :erlang.term_to_binary(counters_map),
+          total_decoded: total_decoded,
+          total_failed: total_failed
+        ]
+      )
 
     :ok
   end
@@ -21,6 +28,7 @@ defmodule BtcTxFeed.StatsSessions do
   def list do
     Repo.all(
       from(s in StatsSession,
+        where: not is_nil(s.ended_at),
         select: %{
           id: s.id,
           started_at: s.started_at,

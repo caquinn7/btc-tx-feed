@@ -62,6 +62,11 @@ defmodule BtcTxFeed.TxStats do
     end
   end
 
+  @doc "Returns the DB id of the current session row."
+  def get_session_id do
+    GenServer.call(__MODULE__, :get_session_id)
+  end
+
   # ---------------------------------------------------------------------------
   # GenServer callbacks
   # ---------------------------------------------------------------------------
@@ -78,19 +83,25 @@ defmodule BtcTxFeed.TxStats do
       write_concurrency: true
     ])
 
-    {:ok, %{started_at: DateTime.utc_now()}}
+    session = BtcTxFeed.StatsSessions.create_open!(DateTime.utc_now())
+    {:ok, %{started_at: session.started_at, session_id: session.id}}
   end
 
   @impl true
-  def terminate(reason, %{started_at: started_at}) do
+  def handle_call(:get_session_id, _from, state) do
+    {:reply, state.session_id, state}
+  end
+
+  @impl true
+  def terminate(reason, %{started_at: _started_at, session_id: session_id}) do
     require Logger
-    Logger.info("TxStats: terminate/2 called (#{inspect(reason)}), archiving session")
+    Logger.info("TxStats: terminate/2 called (#{inspect(reason)}), finalizing session")
     counters = Map.new(:ets.tab2list(@table))
 
     try do
-      BtcTxFeed.StatsSessions.archive!(counters, started_at, DateTime.utc_now())
+      BtcTxFeed.StatsSessions.finalize!(session_id, counters, DateTime.utc_now())
     rescue
-      e -> Logger.error("TxStats: failed to archive session: #{Exception.message(e)}")
+      e -> Logger.error("TxStats: failed to finalize session: #{Exception.message(e)}")
     end
   end
 
