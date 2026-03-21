@@ -32,7 +32,7 @@ defmodule BtcTxFeedWeb.SessionHistoryLive do
               navigate={~p"/analytics"}
               class="text-sm text-base-content/50 hover:text-bitcoin transition-colors"
             >
-              &larr; Back to analytics
+              &larr; Back to live session
             </.link>
           </div>
 
