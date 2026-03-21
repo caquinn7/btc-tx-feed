@@ -31,6 +31,12 @@ defmodule BtcTxFeed.TxParserDecodePolicyTest do
       assert {:error, _} = TxParser.parse(raw(@legacy_v1_hex))
     end
 
+    test "rejects transaction when byte size exceeds max_tx_size" do
+      # @segwit_v1_hex is 372 bytes; limit to 371
+      with_policy(max_tx_size: 371)
+      assert {:error, _} = TxParser.parse(raw(@segwit_v1_hex))
+    end
+
     test "accepts transaction when limits are set but not exceeded" do
       with_policy(max_vin_count: 10, max_vout_count: 50)
       assert {:ok, _} = TxParser.parse(raw(@legacy_v1_hex))
