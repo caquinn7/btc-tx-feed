@@ -8,7 +8,6 @@ defmodule BtcTxFeed.TxStats do
   use GenServer
 
   @table :tx_stats
-  @flush_interval if Mix.env() == :prod, do: :timer.minutes(5), else: :timer.seconds(30)
 
   # ---------------------------------------------------------------------------
   # Public API
@@ -69,8 +68,6 @@ defmodule BtcTxFeed.TxStats do
 
   @impl true
   def init(_) do
-    Process.flag(:trap_exit, true)
-
     :ets.new(@table, [
       :named_table,
       :public,
@@ -96,65 +93,6 @@ defmodule BtcTxFeed.TxStats do
 
   defp increment(key) do
     :ets.update_counter(@table, key, 1, {key, 0})
-  end
-
-  defp schedule_flush do
-    Process.send_after(self(), :flush, @flush_interval)
-  end
-
-  defp snapshot_path do
-    Application.get_env(:btc_tx_feed, :tx_stats_snapshot_path)
-  end
-
-  defp load_snapshot do
-    case snapshot_path() do
-      nil ->
-        :ok
-
-      path ->
-        case File.read(path) do
-          {:ok, binary} ->
-            try do
-              entries = :erlang.binary_to_term(binary)
-              :ets.insert(@table, entries)
-            rescue
-              e ->
-                require Logger
-
-                Logger.warning(
-                  "TxStats: snapshot corrupt, starting fresh — #{Exception.message(e)}"
-                )
-            end
-
-          {:error, :enoent} ->
-            :ok
-
-          {:error, reason} ->
-            require Logger
-            Logger.warning("TxStats: could not read snapshot #{path}: #{inspect(reason)}")
-        end
-    end
-  end
-
-  defp persist_snapshot do
-    case snapshot_path() do
-      nil ->
-        :ok
-
-      path ->
-        entries = :ets.tab2list(@table)
-        binary = :erlang.term_to_binary(entries)
-        tmp = path <> ".tmp"
-
-        with :ok <- File.write(tmp, binary),
-             :ok <- :file.rename(tmp, path) do
-          :ok
-        else
-          {:error, reason} ->
-            require Logger
-            Logger.error("TxStats: snapshot write failed: #{inspect(reason)}")
-        end
-    end
   end
 
   defp vsize_bucket(v) when v < 250, do: :tiny
