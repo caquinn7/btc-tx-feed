@@ -4,6 +4,10 @@ defmodule BtcTxFeed.TxStatsTest do
   alias BtcTxFeed.TxStats
 
   setup do
+    sandbox_owner =
+      Ecto.Adapters.SQL.Sandbox.start_owner!(BtcTxFeed.Repo, shared: true)
+
+    on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(sandbox_owner) end)
     start_supervised!(TxStats)
     :ok
   end

@@ -39,10 +39,6 @@ if config_env() == :prod do
   config :btc_tx_feed, BtcTxFeed.Repo,
     database: System.get_env("DATABASE_PATH", "/data/btc_tx_feed.db")
 
-  config :btc_tx_feed,
-         :tx_stats_snapshot_path,
-         System.get_env("TX_STATS_SNAPSHOT_PATH", "/data/tx_stats_snapshot.bin")
-
   # The secret key base is used to sign/encrypt cookies and other secrets.
   # A default value is used in config/dev.exs and config/test.exs but you
   # want to use a different value for prod and you most likely don't want
