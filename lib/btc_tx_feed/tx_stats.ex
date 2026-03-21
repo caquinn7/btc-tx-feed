@@ -79,24 +79,15 @@ defmodule BtcTxFeed.TxStats do
       write_concurrency: true
     ])
 
-    load_snapshot()
-    schedule_flush()
-
-    {:ok, nil}
+    {:ok, %{started_at: DateTime.utc_now()}}
   end
 
   @impl true
-  def handle_info(:flush, state) do
-    persist_snapshot()
-    schedule_flush()
-    {:noreply, state}
-  end
-
-  @impl true
-  def terminate(reason, _state) do
+  def terminate(reason, %{started_at: started_at}) do
     require Logger
-    Logger.info("TxStats: terminate/2 called (#{inspect(reason)}), flushing snapshot")
-    persist_snapshot()
+    Logger.info("TxStats: terminate/2 called (#{inspect(reason)}), archiving session")
+    counters = Map.new(:ets.tab2list(@table))
+    BtcTxFeed.StatsSessions.archive(counters, started_at, DateTime.utc_now())
   end
 
   # ---------------------------------------------------------------------------
