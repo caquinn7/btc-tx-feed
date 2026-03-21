@@ -72,7 +72,14 @@ defmodule BtcTxFeedWeb.SessionHistoryLive do
                     class="border-b last:border-0 border-base-300 hover:bg-base-200/50 cursor-pointer transition-colors"
                     phx-click={JS.navigate(~p"/analytics/history/#{session.id}")}
                   >
-                    <td class="p-4 font-mono text-xs">{format_datetime(session.started_at)}</td>
+                    <td class="p-4 font-mono text-xs">
+                      <.link
+                        navigate={~p"/analytics/history/#{session.id}"}
+                        class="hover:underline"
+                      >
+                        {format_datetime(session.started_at)}
+                      </.link>
+                    </td>
                     <td class="p-4 font-mono text-xs text-base-content/60">
                       {format_duration(session.started_at, session.ended_at)}
                     </td>
