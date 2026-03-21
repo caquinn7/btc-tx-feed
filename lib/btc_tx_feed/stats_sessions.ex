@@ -43,6 +43,7 @@ defmodule BtcTxFeed.StatsSessions do
 
   def get!(id) do
     session = Repo.get!(StatsSession, id)
-    %{session | counters: :erlang.binary_to_term(session.counters)}
+    counters = if session.counters, do: :erlang.binary_to_term(session.counters), else: nil
+    %{session | counters: counters}
   end
 end

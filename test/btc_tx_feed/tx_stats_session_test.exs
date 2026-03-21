@@ -32,10 +32,25 @@ defmodule BtcTxFeed.TxStatsSessionTest do
       start_supervised!(TxStats)
       assert TxStats.get() == %{}
     end
+
+    test "creates an open session row in the database" do
+      start_supervised!(TxStats)
+      assert Repo.aggregate(StatsSession, :count) == 1
+      [session] = Repo.all(StatsSession)
+      assert session.ended_at == nil
+    end
+  end
+
+  describe "get_session_id/0" do
+    test "returns the DB row id of the current open session" do
+      start_supervised!(TxStats)
+      [session] = Repo.all(StatsSession)
+      assert TxStats.get_session_id() == session.id
+    end
   end
 
   describe "terminate/2" do
-    test "archives a session row to the database on shutdown" do
+    test "finalizes the session row in the database on shutdown" do
       start_supervised!(TxStats)
 
       TxStats.record(base_details())
@@ -43,11 +58,10 @@ defmodule BtcTxFeed.TxStatsSessionTest do
 
       stop_supervised!(TxStats)
 
-      sessions = Repo.all(StatsSession)
-      assert length(sessions) == 1
+      assert length(Repo.all(StatsSession)) == 1
     end
 
-    test "archives correct decoded and failed totals" do
+    test "finalizes correct decoded and failed totals" do
       start_supervised!(TxStats)
 
       TxStats.record(base_details())
@@ -61,7 +75,7 @@ defmodule BtcTxFeed.TxStatsSessionTest do
       assert session.total_failed == 1
     end
 
-    test "archived session has ended_at set" do
+    test "finalized session has ended_at set" do
       start_supervised!(TxStats)
 
       stop_supervised!(TxStats)
@@ -70,7 +84,7 @@ defmodule BtcTxFeed.TxStatsSessionTest do
       assert session.ended_at != nil
     end
 
-    test "archived counters blob round-trips to a map" do
+    test "finalized counters blob round-trips to a map" do
       start_supervised!(TxStats)
 
       TxStats.record(base_details(%{is_segwit: true}))
