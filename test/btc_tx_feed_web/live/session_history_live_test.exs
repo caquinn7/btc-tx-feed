@@ -27,13 +27,13 @@ defmodule BtcTxFeedWeb.SessionHistoryLiveTest do
     end
 
     test "renders a row for each archived session", %{conn: conn} do
-      StatsSessions.archive(
+      StatsSessions.archive!(
         %{total_decoded: 10, total_failed: 2},
         ~U[2026-01-01 10:00:00Z],
         ~U[2026-01-01 11:00:00Z]
       )
 
-      StatsSessions.archive(
+      StatsSessions.archive!(
         %{total_decoded: 5, total_failed: 0},
         ~U[2026-01-02 10:00:00Z],
         ~U[2026-01-02 11:00:00Z]
@@ -46,7 +46,7 @@ defmodule BtcTxFeedWeb.SessionHistoryLiveTest do
     end
 
     test "session rows link to the detail view", %{conn: conn} do
-      StatsSessions.archive(
+      StatsSessions.archive!(
         %{total_decoded: 3, total_failed: 0},
         ~U[2026-01-01 10:00:00Z],
         ~U[2026-01-01 11:00:00Z]
@@ -73,7 +73,7 @@ defmodule BtcTxFeedWeb.SessionHistoryLiveTest do
         legacy_count: 20
       }
 
-      StatsSessions.archive(counters, ~U[2026-01-01 10:00:00Z], ~U[2026-01-01 11:00:00Z])
+      StatsSessions.archive!(counters, ~U[2026-01-01 10:00:00Z], ~U[2026-01-01 11:00:00Z])
       [%{id: id}] = BtcTxFeed.StatsSessions.list()
       %{session_id: id}
     end

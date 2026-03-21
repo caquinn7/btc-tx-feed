@@ -3,19 +3,23 @@ defmodule BtcTxFeed.StatsSessionsTest do
 
   alias BtcTxFeed.{Repo, StatsSession, StatsSessions}
 
-  describe "archive/3" do
+  describe "archive!/3" do
     test "inserts a stats_sessions row" do
       counters = %{total_decoded: 42, total_failed: 3}
 
       assert :ok =
-               StatsSessions.archive(counters, ~U[2026-01-01 10:00:00Z], ~U[2026-01-01 11:00:00Z])
+               StatsSessions.archive!(
+                 counters,
+                 ~U[2026-01-01 10:00:00Z],
+                 ~U[2026-01-01 11:00:00Z]
+               )
 
       assert Repo.aggregate(StatsSession, :count) == 1
     end
 
     test "stores denormalized totals" do
       counters = %{total_decoded: 10, total_failed: 2}
-      StatsSessions.archive(counters, ~U[2026-01-01 10:00:00Z], ~U[2026-01-01 11:00:00Z])
+      StatsSessions.archive!(counters, ~U[2026-01-01 10:00:00Z], ~U[2026-01-01 11:00:00Z])
 
       [session] = Repo.all(StatsSession)
       assert session.total_decoded == 10
@@ -24,7 +28,7 @@ defmodule BtcTxFeed.StatsSessionsTest do
 
     test "stores counters blob that round-trips" do
       counters = %{{:version, 2} => 5, total_decoded: 5, total_failed: 1}
-      StatsSessions.archive(counters, ~U[2026-01-01 10:00:00Z], ~U[2026-01-01 11:00:00Z])
+      StatsSessions.archive!(counters, ~U[2026-01-01 10:00:00Z], ~U[2026-01-01 11:00:00Z])
 
       [session] = Repo.all(StatsSession)
       assert :erlang.binary_to_term(session.counters) == counters
@@ -33,7 +37,7 @@ defmodule BtcTxFeed.StatsSessionsTest do
     test "stores started_at and ended_at" do
       started_at = ~U[2026-01-01 10:00:00Z]
       ended_at = ~U[2026-01-01 11:30:00Z]
-      StatsSessions.archive(%{total_decoded: 0, total_failed: 0}, started_at, ended_at)
+      StatsSessions.archive!(%{total_decoded: 0, total_failed: 0}, started_at, ended_at)
 
       [session] = Repo.all(StatsSession)
       assert session.started_at == started_at
@@ -47,13 +51,13 @@ defmodule BtcTxFeed.StatsSessionsTest do
     end
 
     test "returns sessions ordered by started_at desc" do
-      StatsSessions.archive(
+      StatsSessions.archive!(
         %{total_decoded: 1, total_failed: 0},
         ~U[2026-01-01 10:00:00Z],
         ~U[2026-01-01 11:00:00Z]
       )
 
-      StatsSessions.archive(
+      StatsSessions.archive!(
         %{total_decoded: 2, total_failed: 0},
         ~U[2026-01-02 10:00:00Z],
         ~U[2026-01-02 11:00:00Z]
@@ -65,7 +69,7 @@ defmodule BtcTxFeed.StatsSessionsTest do
     end
 
     test "does not include the counters blob" do
-      StatsSessions.archive(
+      StatsSessions.archive!(
         %{total_decoded: 1, total_failed: 0},
         ~U[2026-01-01 10:00:00Z],
         ~U[2026-01-01 11:00:00Z]
@@ -76,7 +80,7 @@ defmodule BtcTxFeed.StatsSessionsTest do
     end
 
     test "includes id, started_at, ended_at, total_decoded, total_failed" do
-      StatsSessions.archive(
+      StatsSessions.archive!(
         %{total_decoded: 7, total_failed: 2},
         ~U[2026-01-01 10:00:00Z],
         ~U[2026-01-01 11:00:00Z]
@@ -95,7 +99,7 @@ defmodule BtcTxFeed.StatsSessionsTest do
     test "returns session with deserialized counters map" do
       counters = %{total_decoded: 7, total_failed: 1, segwit_count: 4}
 
-      StatsSessions.archive(counters, ~U[2026-01-01 10:00:00Z], ~U[2026-01-01 11:00:00Z])
+      StatsSessions.archive!(counters, ~U[2026-01-01 10:00:00Z], ~U[2026-01-01 11:00:00Z])
 
       %{id: id} = Repo.one!(StatsSession)
       session = StatsSessions.get!(id)

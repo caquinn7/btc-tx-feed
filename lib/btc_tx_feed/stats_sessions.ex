@@ -3,7 +3,7 @@ defmodule BtcTxFeed.StatsSessions do
 
   alias BtcTxFeed.{Repo, StatsSession}
 
-  def archive(counters_map, %DateTime{} = started_at, %DateTime{} = ended_at) do
+  def archive!(counters_map, %DateTime{} = started_at, %DateTime{} = ended_at) do
     total_decoded = Map.get(counters_map, :total_decoded, 0)
     total_failed = Map.get(counters_map, :total_failed, 0)
 
