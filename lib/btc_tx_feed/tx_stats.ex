@@ -86,7 +86,12 @@ defmodule BtcTxFeed.TxStats do
     require Logger
     Logger.info("TxStats: terminate/2 called (#{inspect(reason)}), archiving session")
     counters = Map.new(:ets.tab2list(@table))
-    BtcTxFeed.StatsSessions.archive!(counters, started_at, DateTime.utc_now())
+
+    try do
+      BtcTxFeed.StatsSessions.archive!(counters, started_at, DateTime.utc_now())
+    rescue
+      e -> Logger.error("TxStats: failed to archive session: #{Exception.message(e)}")
+    end
   end
 
   # ---------------------------------------------------------------------------
