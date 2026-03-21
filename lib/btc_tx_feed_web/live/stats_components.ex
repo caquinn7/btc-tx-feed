@@ -5,7 +5,7 @@ defmodule BtcTxFeedWeb.StatsComponents do
 
   def stats_pass_rate(assigns) do
     ~H"""
-    <div class="rounded-xl border border-base-300 bg-base-200 p-5">
+    <div id="stats-pass-rate" class="rounded-xl border border-base-300 bg-base-200 p-5">
       <div class="flex items-baseline justify-between mb-3">
         <h2 class="text-sm font-semibold uppercase tracking-wider text-base-content/60">
           Decode pass rate
@@ -32,7 +32,7 @@ defmodule BtcTxFeedWeb.StatsComponents do
 
   def stats_tx_type(assigns) do
     ~H"""
-    <div class="rounded-xl border border-base-300 bg-base-200 p-5">
+    <div id="stats-tx-type" class="rounded-xl border border-base-300 bg-base-200 p-5">
       <h2 class="text-sm font-semibold uppercase tracking-wider text-base-content/60 mb-4">
         Transaction type
       </h2>
@@ -62,7 +62,7 @@ defmodule BtcTxFeedWeb.StatsComponents do
 
   def stats_vsize(assigns) do
     ~H"""
-    <div class="rounded-xl border border-base-300 bg-base-200 p-5">
+    <div id="stats-vsize" class="rounded-xl border border-base-300 bg-base-200 p-5">
       <h2 class="text-sm font-semibold uppercase tracking-wider text-base-content/60 mb-4">
         Virtual size distribution
       </h2>
@@ -98,7 +98,7 @@ defmodule BtcTxFeedWeb.StatsComponents do
 
   def stats_script_types(assigns) do
     ~H"""
-    <div class="rounded-xl border border-base-300 bg-base-200 p-5">
+    <div id="stats-script-types" class="rounded-xl border border-base-300 bg-base-200 p-5">
       <h2 class="text-sm font-semibold uppercase tracking-wider text-base-content/60 mb-4">
         Output script types
       </h2>
@@ -128,7 +128,7 @@ defmodule BtcTxFeedWeb.StatsComponents do
 
   def stats_version_histogram(assigns) do
     ~H"""
-    <div class="rounded-xl border border-base-300 bg-base-200 p-5">
+    <div id="stats-version-histogram" class="rounded-xl border border-base-300 bg-base-200 p-5">
       <h2 class="text-sm font-semibold uppercase tracking-wider text-base-content/60 mb-4">
         Version histogram
       </h2>
@@ -157,7 +157,7 @@ defmodule BtcTxFeedWeb.StatsComponents do
 
   def stats_io_buckets(assigns) do
     ~H"""
-    <div class="grid grid-cols-2 gap-6">
+    <div id="stats-io-buckets" class="grid grid-cols-2 gap-6">
       <div class="rounded-xl border border-base-300 bg-base-200 p-5">
         <h2 class="text-sm font-semibold uppercase tracking-wider text-base-content/60 mb-4">
           Input count
