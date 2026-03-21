@@ -68,6 +68,8 @@ defmodule BtcTxFeed.TxStats do
 
   @impl true
   def init(_) do
+    Process.flag(:trap_exit, true)
+
     :ets.new(@table, [
       :named_table,
       :public,
