@@ -91,12 +91,12 @@ defmodule BtcTxFeed.TxSampler do
 
             {:error, reason} ->
               TxStats.record_failure()
-              FailureStore.insert(txid, raw, reason)
+              FailureStore.insert(txid, raw, reason, TxStats.get_session_id())
           end
         rescue
           e ->
             TxStats.record_failure()
-            FailureStore.insert(txid, raw, Exception.message(e))
+            FailureStore.insert(txid, raw, Exception.message(e), TxStats.get_session_id())
         end
 
       {:error, {:http_error, 429}} ->

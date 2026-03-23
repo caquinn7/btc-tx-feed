@@ -3,45 +3,57 @@ defmodule BtcTxFeed.StatsSessionsTest do
 
   alias BtcTxFeed.{Repo, StatsSession, StatsSessions}
 
-  describe "archive!/3" do
-    test "inserts a stats_sessions row" do
-      counters = %{total_decoded: 42, total_failed: 3}
+  describe "create_open!/2" do
+    test "inserts a row with started_at and decode_policy, returns a struct with an id" do
+      policy = %{max_tx_size: 100_000, max_vin_count: 50}
+      session = StatsSessions.create_open!(~U[2026-01-01 10:00:00Z], policy)
 
-      assert :ok =
-               StatsSessions.archive!(
-                 counters,
-                 ~U[2026-01-01 10:00:00Z],
-                 ~U[2026-01-01 11:00:00Z]
-               )
+      assert session.id != nil
+      assert session.started_at == ~U[2026-01-01 10:00:00Z]
+      assert session.ended_at == nil
+      assert session.counters == nil
+    end
 
+    test "persists the decode_policy blob" do
+      policy = %{max_tx_size: 99_999, max_vin_count: 42}
+      session = StatsSessions.create_open!(~U[2026-01-01 10:00:00Z], policy)
+
+      row = Repo.get!(StatsSession, session.id)
+      assert :erlang.binary_to_term(row.decode_policy) == policy
+    end
+
+    test "the row is visible in the database" do
+      StatsSessions.create_open!(~U[2026-01-01 10:00:00Z], %{})
       assert Repo.aggregate(StatsSession, :count) == 1
     end
+  end
 
-    test "stores denormalized totals" do
-      counters = %{total_decoded: 10, total_failed: 2}
-      StatsSessions.archive!(counters, ~U[2026-01-01 10:00:00Z], ~U[2026-01-01 11:00:00Z])
+  describe "finalize!/3" do
+    test "updates ended_at, counters, and totals on the open row" do
+      session = StatsSessions.create_open!(~U[2026-01-01 10:00:00Z], %{})
+      counters = %{total_decoded: 42, total_failed: 3}
 
-      [session] = Repo.all(StatsSession)
-      assert session.total_decoded == 10
-      assert session.total_failed == 2
+      assert :ok = StatsSessions.finalize!(session.id, counters, ~U[2026-01-01 11:00:00Z])
+
+      row = Repo.get!(StatsSession, session.id)
+      assert row.ended_at == ~U[2026-01-01 11:00:00Z]
+      assert row.total_decoded == 42
+      assert row.total_failed == 3
+      assert :erlang.binary_to_term(row.counters) == counters
     end
+  end
 
-    test "stores counters blob that round-trips" do
+  describe "create_open!/2 + finalize!/3 roundtrip" do
+    test "a session can be opened and finalized end-to-end" do
+      session = StatsSessions.create_open!(~U[2026-01-01 10:00:00Z], %{})
       counters = %{{:version, 2} => 5, total_decoded: 5, total_failed: 1}
-      StatsSessions.archive!(counters, ~U[2026-01-01 10:00:00Z], ~U[2026-01-01 11:00:00Z])
 
-      [session] = Repo.all(StatsSession)
-      assert :erlang.binary_to_term(session.counters) == counters
-    end
+      StatsSessions.finalize!(session.id, counters, ~U[2026-01-01 11:00:00Z])
 
-    test "stores started_at and ended_at" do
-      started_at = ~U[2026-01-01 10:00:00Z]
-      ended_at = ~U[2026-01-01 11:30:00Z]
-      StatsSessions.archive!(%{total_decoded: 0, total_failed: 0}, started_at, ended_at)
-
-      [session] = Repo.all(StatsSession)
-      assert session.started_at == started_at
-      assert session.ended_at == ended_at
+      retrieved = StatsSessions.get!(session.id)
+      assert retrieved.started_at == ~U[2026-01-01 10:00:00Z]
+      assert retrieved.ended_at == ~U[2026-01-01 11:00:00Z]
+      assert retrieved.counters == counters
     end
   end
 
@@ -50,16 +62,37 @@ defmodule BtcTxFeed.StatsSessionsTest do
       assert StatsSessions.list() == []
     end
 
-    test "returns sessions ordered by started_at desc" do
-      StatsSessions.archive!(
-        %{total_decoded: 1, total_failed: 0},
-        ~U[2026-01-01 10:00:00Z],
+    test "excludes open sessions (ended_at IS NULL)" do
+      StatsSessions.create_open!(~U[2026-01-01 10:00:00Z], %{})
+      assert StatsSessions.list() == []
+    end
+
+    test "includes only finalized sessions" do
+      s = StatsSessions.create_open!(~U[2026-01-01 10:00:00Z], %{})
+
+      StatsSessions.finalize!(
+        s.id,
+        %{total_decoded: 5, total_failed: 0},
         ~U[2026-01-01 11:00:00Z]
       )
 
-      StatsSessions.archive!(
+      assert length(StatsSessions.list()) == 1
+    end
+
+    test "returns sessions ordered by started_at desc" do
+      s1 = StatsSessions.create_open!(~U[2026-01-01 10:00:00Z], %{})
+
+      StatsSessions.finalize!(
+        s1.id,
+        %{total_decoded: 1, total_failed: 0},
+        ~U[2026-01-01 11:00:00Z]
+      )
+
+      s2 = StatsSessions.create_open!(~U[2026-01-02 10:00:00Z], %{})
+
+      StatsSessions.finalize!(
+        s2.id,
         %{total_decoded: 2, total_failed: 0},
-        ~U[2026-01-02 10:00:00Z],
         ~U[2026-01-02 11:00:00Z]
       )
 
@@ -69,9 +102,11 @@ defmodule BtcTxFeed.StatsSessionsTest do
     end
 
     test "does not include the counters blob" do
-      StatsSessions.archive!(
+      s = StatsSessions.create_open!(~U[2026-01-01 10:00:00Z], %{})
+
+      StatsSessions.finalize!(
+        s.id,
         %{total_decoded: 1, total_failed: 0},
-        ~U[2026-01-01 10:00:00Z],
         ~U[2026-01-01 11:00:00Z]
       )
 
@@ -80,9 +115,11 @@ defmodule BtcTxFeed.StatsSessionsTest do
     end
 
     test "includes id, started_at, ended_at, total_decoded, total_failed" do
-      StatsSessions.archive!(
+      s = StatsSessions.create_open!(~U[2026-01-01 10:00:00Z], %{})
+
+      StatsSessions.finalize!(
+        s.id,
         %{total_decoded: 7, total_failed: 2},
-        ~U[2026-01-01 10:00:00Z],
         ~U[2026-01-01 11:00:00Z]
       )
 
@@ -96,16 +133,32 @@ defmodule BtcTxFeed.StatsSessionsTest do
   end
 
   describe "get!/1" do
-    test "returns session with deserialized counters map" do
+    test "returns a finalized session with deserialized counters map" do
       counters = %{total_decoded: 7, total_failed: 1, segwit_count: 4}
+      s = StatsSessions.create_open!(~U[2026-01-01 10:00:00Z], %{})
+      StatsSessions.finalize!(s.id, counters, ~U[2026-01-01 11:00:00Z])
 
-      StatsSessions.archive!(counters, ~U[2026-01-01 10:00:00Z], ~U[2026-01-01 11:00:00Z])
-
-      %{id: id} = Repo.one!(StatsSession)
-      session = StatsSessions.get!(id)
-
+      session = StatsSessions.get!(s.id)
       assert session.counters == counters
       assert session.total_decoded == 7
+    end
+
+    test "deserializes the decode_policy blob" do
+      policy = %{max_tx_size: 50_000, max_vin_count: 10}
+      s = StatsSessions.create_open!(~U[2026-01-01 10:00:00Z], policy)
+
+      session = StatsSessions.get!(s.id)
+      assert session.decode_policy == policy
+    end
+
+    test "returns an open session with nil counters and deserialized decode_policy" do
+      policy = %{max_tx_size: 400_000}
+      s = StatsSessions.create_open!(~U[2026-01-01 10:00:00Z], policy)
+
+      session = StatsSessions.get!(s.id)
+      assert session.ended_at == nil
+      assert session.counters == nil
+      assert session.decode_policy == policy
     end
 
     test "raises Ecto.NoResultsError for unknown id" do
