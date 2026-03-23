@@ -27,19 +27,15 @@ defmodule BtcTxFeedWeb.SessionHistoryLiveTest do
     end
 
     test "renders a row for each archived session", %{conn: conn} do
-      s1 = StatsSessions.create_open!(~U[2026-01-01 10:00:00Z], %{})
-
-      StatsSessions.finalize!(
-        s1.id,
+      StatsSessions.archive!(
         %{total_decoded: 10, total_failed: 2},
+        ~U[2026-01-01 10:00:00Z],
         ~U[2026-01-01 11:00:00Z]
       )
 
-      s2 = StatsSessions.create_open!(~U[2026-01-02 10:00:00Z], %{})
-
-      StatsSessions.finalize!(
-        s2.id,
+      StatsSessions.archive!(
         %{total_decoded: 5, total_failed: 0},
+        ~U[2026-01-02 10:00:00Z],
         ~U[2026-01-02 11:00:00Z]
       )
 
@@ -50,11 +46,9 @@ defmodule BtcTxFeedWeb.SessionHistoryLiveTest do
     end
 
     test "session rows link to the detail view", %{conn: conn} do
-      s = StatsSessions.create_open!(~U[2026-01-01 10:00:00Z], %{})
-
-      StatsSessions.finalize!(
-        s.id,
+      StatsSessions.archive!(
         %{total_decoded: 3, total_failed: 0},
+        ~U[2026-01-01 10:00:00Z],
         ~U[2026-01-01 11:00:00Z]
       )
 
@@ -79,17 +73,7 @@ defmodule BtcTxFeedWeb.SessionHistoryLiveTest do
         legacy_count: 20
       }
 
-      policy = %{
-        max_tx_size: 400_000,
-        max_vin_count: 50,
-        max_vout_count: 50,
-        max_script_size: 10_000,
-        max_witness_items_per_input: 20,
-        max_witness_size_per_input: 500_000
-      }
-
-      s = StatsSessions.create_open!(~U[2026-01-01 10:00:00Z], policy)
-      StatsSessions.finalize!(s.id, counters, ~U[2026-01-01 11:00:00Z])
+      StatsSessions.archive!(counters, ~U[2026-01-01 10:00:00Z], ~U[2026-01-01 11:00:00Z])
       [%{id: id}] = BtcTxFeed.StatsSessions.list()
       %{session_id: id}
     end
@@ -120,18 +104,6 @@ defmodule BtcTxFeedWeb.SessionHistoryLiveTest do
       pass_rate_html = view |> element("#stats-pass-rate") |> render()
       assert pass_rate_html =~ "50"
       assert pass_rate_html =~ "5"
-    end
-
-    test "renders a failures link with the correct session_id", %{conn: conn, session_id: id} do
-      {:ok, view, _html} = live(conn, ~p"/analytics/history/#{id}")
-
-      assert has_element?(view, "a[href='/analytics/failures?session_id=#{id}']")
-    end
-
-    test "renders the decode policy limits section", %{conn: conn, session_id: id} do
-      {:ok, view, _html} = live(conn, ~p"/analytics/history/#{id}")
-
-      assert has_element?(view, "#stats-decode-policy")
     end
   end
 end

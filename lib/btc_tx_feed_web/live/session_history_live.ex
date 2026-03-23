@@ -104,17 +104,9 @@ defmodule BtcTxFeedWeb.SessionHistoryLive do
             >
               &larr; Back to history
             </.link>
-            <div class="flex items-center gap-6 text-xs text-base-content/40 font-mono">
+            <div class="flex gap-6 text-xs text-base-content/40 font-mono">
               <span>Started: {format_datetime(@session.started_at)}</span>
               <span>Duration: {format_duration(@session.started_at, @session.ended_at)}</span>
-              <.link
-                navigate={~p"/analytics/failures?session_id=#{@session.id}"}
-                class="hover:text-bitcoin transition-colors"
-              >
-                {@session.total_failed} decode {if @session.total_failed == 1,
-                  do: "failure",
-                  else: "failures"} &rarr;
-              </.link>
             </div>
           </div>
 
@@ -124,9 +116,6 @@ defmodule BtcTxFeedWeb.SessionHistoryLive do
           <.stats_script_types stats={@session.counters} />
           <.stats_version_histogram stats={@session.counters} />
           <.stats_io_buckets stats={@session.counters} />
-          <%= if @session.decode_policy do %>
-            <.decode_policy_limits policy={@session.decode_policy} />
-          <% end %>
         </div>
       <% end %>
     </Layouts.app>
