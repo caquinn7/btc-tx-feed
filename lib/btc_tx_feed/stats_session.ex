@@ -5,6 +5,7 @@ defmodule BtcTxFeed.StatsSession do
     field(:started_at, :utc_datetime)
     field(:ended_at, :utc_datetime)
     field(:counters, :binary)
+    field(:decode_policy, :binary)
     field(:total_decoded, :integer)
     field(:total_failed, :integer)
   end

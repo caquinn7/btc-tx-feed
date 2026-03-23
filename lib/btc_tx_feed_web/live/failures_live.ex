@@ -1,12 +1,49 @@
 defmodule BtcTxFeedWeb.FailuresLive do
   use BtcTxFeedWeb, :live_view
 
-  alias BtcTxFeed.FailureStore
+  alias BtcTxFeed.{FailureStore, StatsSessions}
 
   @impl true
-  def mount(_params, _session, socket) do
-    failures = FailureStore.list_recent(50)
-    {:ok, stream(socket, :failures, failures)}
+  def mount(params, _session, socket) do
+    case parse_session_id(params["session_id"]) do
+      {:ok, session_id} ->
+        session = StatsSessions.get!(session_id)
+        failures = FailureStore.list_for_session(session_id)
+
+        back_path =
+          if session.ended_at, do: ~p"/analytics/history/#{session_id}", else: ~p"/analytics"
+
+        socket =
+          socket
+          |> assign(:back_path, back_path)
+          |> assign(:scoped?, true)
+          |> stream(:failures, failures)
+
+        {:ok, socket}
+
+      :no_param ->
+        failures = FailureStore.list_recent(50)
+
+        socket =
+          socket
+          |> assign(:back_path, ~p"/analytics")
+          |> assign(:scoped?, false)
+          |> stream(:failures, failures)
+
+        {:ok, socket}
+
+      :invalid ->
+        {:ok, push_navigate(socket, to: ~p"/analytics")}
+    end
+  end
+
+  defp parse_session_id(nil), do: :no_param
+
+  defp parse_session_id(raw) do
+    case Integer.parse(raw) do
+      {id, ""} -> {:ok, id}
+      _ -> :invalid
+    end
   end
 
   @impl true
@@ -18,7 +55,7 @@ defmodule BtcTxFeedWeb.FailuresLive do
         <div class="mb-8">
           <div class="flex items-center gap-3 mb-1">
             <.link
-              navigate={~p"/analytics"}
+              navigate={@back_path}
               class="text-base-content/50 hover:text-bitcoin transition-colors"
             >
               <.icon name="hero-arrow-left" class="text-xl" />
@@ -26,7 +63,11 @@ defmodule BtcTxFeedWeb.FailuresLive do
             <h1 class="text-2xl font-bold tracking-tight">Decode Failures</h1>
           </div>
           <p class="text-sm text-base-content/50 ml-7">
-            Last 50 transactions that failed to decode.
+            <%= if @scoped? do %>
+              Transactions that failed to decode in this session.
+            <% else %>
+              Last 50 transactions that failed to decode.
+            <% end %>
           </p>
         </div>
 
@@ -48,7 +89,7 @@ defmodule BtcTxFeedWeb.FailuresLive do
             >
               <div class="flex items-start justify-between gap-4 mb-2">
                 <div class="space-y-1 min-w-0">
-                  <%!-- Txid (truncated) --%>
+                  <%!-- txid --%>
                   <p class="font-mono text-sm text-base-content/80 break-all">
                     <%= if failure.txid do %>
                       {failure.txid}
