@@ -56,32 +56,7 @@ defmodule BtcTxFeedWeb.AnalyticsLive do
         <.stats_version_histogram stats={@stats} />
         <.stats_io_buckets stats={@stats} />
 
-        <%!-- Decode policy --%>
-        <div class="rounded-xl border border-base-300 bg-base-200 p-5">
-          <h2 class="text-sm font-semibold uppercase tracking-wider text-base-content/60 mb-4">
-            Decode policy limits
-          </h2>
-          <div class="grid grid-cols-2 gap-x-8 gap-y-2">
-            <%= for {label, value, unit} <- [
-              {"Max tx size", @decode_policy.max_tx_size, :bytes},
-              {"Max inputs", @decode_policy.max_vin_count, :count},
-              {"Max outputs", @decode_policy.max_vout_count, :count},
-              {"Max script size", @decode_policy.max_script_size, :bytes},
-              {"Max witness items / input", @decode_policy.max_witness_items_per_input, :count},
-              {"Max witness size / input", @decode_policy.max_witness_size_per_input, :bytes}
-            ] do %>
-              <div class="flex items-baseline justify-between py-1.5 border-b border-base-300">
-                <span class="text-xs text-base-content/60">{label}</span>
-                <span class="font-mono text-xs text-base-content/80">
-                  {value}
-                  <%= if unit == :bytes do %>
-                    <span class="text-base-content/35">B</span>
-                  <% end %>
-                </span>
-              </div>
-            <% end %>
-          </div>
-        </div>
+        <.decode_policy_limits policy={@decode_policy} />
       </div>
     </Layouts.app>
     """

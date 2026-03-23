@@ -39,6 +39,15 @@ defmodule BtcTxFeed.TxStatsSessionTest do
       [session] = Repo.all(StatsSession)
       assert session.ended_at == nil
     end
+
+    test "stores the decode_policy snapshot in the session row" do
+      start_supervised!(TxStats)
+      [session] = Repo.all(StatsSession)
+      assert session.decode_policy != nil
+      policy = :erlang.binary_to_term(session.decode_policy)
+      assert is_map(policy)
+      assert Map.has_key?(policy, :max_tx_size)
+    end
   end
 
   describe "get_session_id/0" do

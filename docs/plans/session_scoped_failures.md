@@ -115,7 +115,66 @@ pointing to `~p"/analytics/failures?session_id=#{@session.id}"`.
 
 ---
 
-## Step 10 — Tests
+## Step 11 — Store decode policy snapshot per session
+
+### Motivation
+
+Each session runs under a specific decode policy configuration. Displaying the policy limits
+alongside a session's stats in the history detail view lets you correlate decode behaviour with
+the limits that were active at the time.
+
+### Step 11a — Migration: add `decode_policy` column to `stats_sessions`
+
+Add a nullable `BLOB` column:
+
+```sql
+ALTER TABLE stats_sessions ADD COLUMN decode_policy BLOB
+```
+
+Nullable so existing rows (which pre-date this feature) are unaffected.
+
+### Step 11b — Update `StatsSession` schema
+
+Add `field(:decode_policy, :binary)` to `BtcTxFeed.StatsSession`.
+
+### Step 11c — Update `StatsSessions.create_open!/2`
+
+Rename `create_open!/1` → `create_open!/2`, adding a `decode_policy_map` parameter.
+Serialize it with `:erlang.term_to_binary/1` and persist to the new column alongside
+`started_at`.
+
+### Step 11d — Update `StatsSessions.get!/1`
+
+Deserialize the `decode_policy` blob (nil-safe, same pattern as `counters`):
+
+```elixir
+decode_policy = if session.decode_policy, do: :erlang.binary_to_term(session.decode_policy), else: nil
+```
+
+### Step 11e — Update `TxStats.init/1`
+
+Pass `DecodePolicy.get()` as the second argument to `StatsSessions.create_open!/2`.
+
+### Step 11f — Extract `<.decode_policy_limits>` component into `StatsComponents`
+
+Move the existing "Decode policy limits" table from `AnalyticsLive` into a new function
+component `decode_policy_limits/1` in `BtcTxFeedWeb.StatsComponents`, accepting a `policy`
+assign. Update `AnalyticsLive` to use it.
+
+### Step 11g — Update `SessionHistoryLive` detail view
+
+Render `<.decode_policy_limits policy={@session.decode_policy} />` in the `:show` action.
+Guard the component with a `if @session.decode_policy` check so old sessions without a
+snapshot degrade gracefully (omit the section entirely).
+
+### Step 11h — Tests
+
+- `StatsSessions`: `create_open!/2` persists the blob; `get!/1` deserializes it; nil-safe for
+  old rows.
+- `TxStats`: `init/1` stores the decode policy snapshot in the DB row.
+- `SessionHistoryLive` detail: renders the policy limits table when a snapshot is present;
+  omits it gracefully when `decode_policy` is nil.
+
 
 - `StatsSessions` context: `create_open! + finalize!` roundtrip; verify `list/0` excludes open
   sessions.

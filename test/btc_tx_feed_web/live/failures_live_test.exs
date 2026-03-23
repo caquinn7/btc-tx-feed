@@ -25,7 +25,7 @@ defmodule BtcTxFeedWeb.FailuresLiveTest do
 
   describe "with ?session_id for an open session" do
     setup do
-      session = StatsSessions.create_open!(DateTime.utc_now())
+      session = StatsSessions.create_open!(DateTime.utc_now(), %{})
       %{session: session}
     end
 
@@ -42,7 +42,7 @@ defmodule BtcTxFeedWeb.FailuresLiveTest do
     test "only shows failures from the given session", %{conn: conn, session: session} do
       FailureStore.insert("tx-in-session", <<1>>, :err, session.id)
 
-      other = StatsSessions.create_open!(DateTime.utc_now())
+      other = StatsSessions.create_open!(DateTime.utc_now(), %{})
       FailureStore.insert("tx-other", <<2>>, :err, other.id)
 
       {:ok, view, _html} = live(conn, ~p"/analytics/failures?session_id=#{session.id}")
@@ -55,7 +55,7 @@ defmodule BtcTxFeedWeb.FailuresLiveTest do
 
   describe "with ?session_id for a finalized session" do
     setup do
-      s = StatsSessions.create_open!(~U[2026-01-01 10:00:00Z])
+      s = StatsSessions.create_open!(~U[2026-01-01 10:00:00Z], %{})
 
       StatsSessions.finalize!(
         s.id,

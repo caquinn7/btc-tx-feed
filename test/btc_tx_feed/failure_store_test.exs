@@ -4,7 +4,7 @@ defmodule BtcTxFeed.FailureStoreTest do
   alias BtcTxFeed.{Failure, FailureStore, Repo, StatsSessions}
 
   defp open_session do
-    StatsSessions.create_open!(DateTime.utc_now())
+    StatsSessions.create_open!(DateTime.utc_now(), %{})
   end
 
   describe "insert/4" do

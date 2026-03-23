@@ -3,8 +3,11 @@ defmodule BtcTxFeed.StatsSessions do
 
   alias BtcTxFeed.{Repo, StatsSession}
 
-  def create_open!(%DateTime{} = started_at) do
-    Repo.insert!(%StatsSession{started_at: DateTime.truncate(started_at, :second)})
+  def create_open!(%DateTime{} = started_at, decode_policy_map) do
+    Repo.insert!(%StatsSession{
+      started_at: DateTime.truncate(started_at, :second),
+      decode_policy: :erlang.term_to_binary(decode_policy_map)
+    })
   end
 
   def finalize!(id, counters_map, %DateTime{} = ended_at) do
@@ -44,6 +47,10 @@ defmodule BtcTxFeed.StatsSessions do
   def get!(id) do
     session = Repo.get!(StatsSession, id)
     counters = if session.counters, do: :erlang.binary_to_term(session.counters), else: nil
-    %{session | counters: counters}
+
+    decode_policy =
+      if session.decode_policy, do: :erlang.binary_to_term(session.decode_policy), else: nil
+
+    %{session | counters: counters, decode_policy: decode_policy}
   end
 end

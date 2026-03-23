@@ -124,6 +124,9 @@ defmodule BtcTxFeedWeb.SessionHistoryLive do
           <.stats_script_types stats={@session.counters} />
           <.stats_version_histogram stats={@session.counters} />
           <.stats_io_buckets stats={@session.counters} />
+          <%= if @session.decode_policy do %>
+            <.decode_policy_limits policy={@session.decode_policy} />
+          <% end %>
         </div>
       <% end %>
     </Layouts.app>

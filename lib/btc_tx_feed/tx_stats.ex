@@ -83,7 +83,9 @@ defmodule BtcTxFeed.TxStats do
       write_concurrency: true
     ])
 
-    session = BtcTxFeed.StatsSessions.create_open!(DateTime.utc_now())
+    session =
+      BtcTxFeed.StatsSessions.create_open!(DateTime.utc_now(), BtcTxFeed.DecodePolicy.get())
+
     {:ok, %{started_at: session.started_at, session_id: session.id}}
   end
 
