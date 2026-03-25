@@ -222,10 +222,10 @@ defmodule BtcTxFeedWeb.StatsComponents do
   end
 
   defp bar_width(_count, 0), do: 0
-  defp bar_width(0, _max), do: 0
+  defp bar_width(0, _max_val), do: 0
 
-  defp bar_width(count, max) do
-    width = Float.round(count / max * 100, 1)
+  defp bar_width(count, max_val) do
+    width = Float.round(count / max_val * 100, 1)
     max(width, 0.5)
   end
 
