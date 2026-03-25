@@ -219,9 +219,6 @@ defmodule BtcTxFeedWeb.StatsComponents do
     :erlang.float_to_binary(value * 1.0, decimals: 2)
   end
 
-  defp percentage(_count, 0), do: 0
-  defp percentage(count, total), do: Float.round(count / total * 100, 1)
-
   defp bar_width(_count, 0), do: 0
   defp bar_width(0, _max), do: 0
 
@@ -288,11 +285,6 @@ defmodule BtcTxFeedWeb.StatsComponents do
     |> Enum.filter(fn {k, _} -> match?({:version, _}, k) end)
     |> Enum.map(fn {_, count} -> count end)
     |> Enum.max(fn -> 0 end)
-  end
-
-  defp bucket_total(stats, prefix) do
-    [:single, :few, :many]
-    |> Enum.sum_by(&Map.get(stats, {prefix, &1}, 0))
   end
 
   attr :policy, :map, required: true
