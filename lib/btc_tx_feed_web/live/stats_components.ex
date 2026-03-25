@@ -67,6 +67,7 @@ defmodule BtcTxFeedWeb.StatsComponents do
         Virtual size distribution
       </h2>
       <div class="space-y-2.5">
+        <% vsize_max = vsize_max(@stats) %>
         <%= for {label, bucket} <- [
           {"Tiny (< 250)", :tiny},
           {"Small (250 - 500)", :small},
@@ -80,7 +81,7 @@ defmodule BtcTxFeedWeb.StatsComponents do
             <div class="flex-1 h-2 rounded-full bg-base-300 overflow-hidden">
               <div
                 class="h-full rounded-full bg-blue-400 transition-all duration-500"
-                style={"width: #{bar_width(count, vsize_max(@stats))}%"}
+                style={"width: #{bar_width(count, vsize_max)}%"}
               />
             </div>
             <span class="w-16 text-right font-mono text-xs text-base-content/50">
@@ -132,13 +133,14 @@ defmodule BtcTxFeedWeb.StatsComponents do
         Version histogram
       </h2>
       <div class="space-y-2.5">
+        <% version_max = version_max(@stats) %>
         <%= for {v, count} <- version_rows(@stats) do %>
           <div class="flex items-center gap-3">
             <span class="w-16 text-xs text-base-content/60 shrink-0 font-mono">v{v}</span>
             <div class="flex-1 h-2 rounded-full bg-base-300 overflow-hidden">
               <div
                 class="h-full rounded-full bg-amber-400 transition-all duration-500"
-                style={"width: #{bar_width(count, version_max(@stats))}%"}
+                style={"width: #{bar_width(count, version_max)}%"}
               />
             </div>
             <span class="w-16 text-right font-mono text-xs text-base-content/50">
