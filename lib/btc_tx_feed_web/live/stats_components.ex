@@ -37,15 +37,15 @@ defmodule BtcTxFeedWeb.StatsComponents do
         Transaction type
       </h2>
       <div class="space-y-2.5">
-        <% tx_type_max = tx_type_max(@stats) %>
         <%= for {label, key} <- [{"SegWit", :segwit_count}, {"Legacy", :legacy_count}, {"Coinbase", :coinbase_count}] do %>
           <% count = Map.get(@stats, key, 0) %>
+          <% total = Map.get(@stats, :total_decoded, 0) %>
           <div class="flex items-center gap-3">
             <span class="w-20 text-xs text-base-content/60 shrink-0">{label}</span>
             <div class="flex-1 h-2 rounded-full bg-base-300 overflow-hidden">
               <div
                 class="h-full rounded-full bg-orange-400 transition-all duration-500"
-                style={"width: #{bar_width(count, tx_type_max)}%"}
+                style={"width: #{percentage(count, total)}%"}
               />
             </div>
             <span class="w-16 text-right font-mono text-xs text-base-content/50">
@@ -75,12 +75,13 @@ defmodule BtcTxFeedWeb.StatsComponents do
           {"Oversized (> 5k)", :oversized}
         ] do %>
           <% count = Map.get(@stats, {:vsize_bucket, bucket}, 0) %>
+          <% total = vsize_total(@stats) %>
           <div class="flex items-center gap-3">
             <span class="w-36 text-xs text-base-content/60 shrink-0">{label}</span>
             <div class="flex-1 h-2 rounded-full bg-base-300 overflow-hidden">
               <div
                 class="h-full rounded-full bg-blue-400 transition-all duration-500"
-                style={"width: #{bar_width(count, vsize_max(@stats))}%"}
+                style={"width: #{percentage(count, total)}%"}
               />
             </div>
             <span class="w-16 text-right font-mono text-xs text-base-content/50">
@@ -102,15 +103,15 @@ defmodule BtcTxFeedWeb.StatsComponents do
         Output script types
       </h2>
       <div class="space-y-2.5">
-        <% script_max = script_type_max(@stats) %>
         <%= for {label, type} <- script_type_rows(@stats) do %>
           <% count = Map.get(@stats, {:script_type, type}, 0) %>
+          <% total = script_type_total(@stats) %>
           <div class="flex items-center gap-3">
             <span class="w-32 text-xs text-base-content/60 shrink-0">{label}</span>
             <div class="flex-1 h-2 rounded-full bg-base-300 overflow-hidden">
               <div
                 class="h-full rounded-full bg-violet-400 transition-all duration-500"
-                style={"width: #{bar_width(count, script_max)}%"}
+                style={"width: #{percentage(count, total)}%"}
               />
             </div>
             <span class="w-16 text-right font-mono text-xs text-base-content/50">
@@ -133,12 +134,13 @@ defmodule BtcTxFeedWeb.StatsComponents do
       </h2>
       <div class="space-y-2.5">
         <%= for {v, count} <- version_rows(@stats) do %>
+          <% total = Map.get(@stats, :total_decoded, 0) %>
           <div class="flex items-center gap-3">
             <span class="w-16 text-xs text-base-content/60 shrink-0 font-mono">v{v}</span>
             <div class="flex-1 h-2 rounded-full bg-base-300 overflow-hidden">
               <div
                 class="h-full rounded-full bg-amber-400 transition-all duration-500"
-                style={"width: #{bar_width(count, version_max(@stats))}%"}
+                style={"width: #{percentage(count, total)}%"}
               />
             </div>
             <span class="w-16 text-right font-mono text-xs text-base-content/50">
@@ -161,15 +163,15 @@ defmodule BtcTxFeedWeb.StatsComponents do
           Input count
         </h2>
         <div class="space-y-2.5">
-          <% input_max = bucket_max(@stats, :input_bucket) %>
           <%= for {label, bucket} <- [{"Single", :single}, {"Few (2 - 5)", :few}, {"Many (> 5)", :many}] do %>
             <% count = Map.get(@stats, {:input_bucket, bucket}, 0) %>
+            <% total = bucket_total(@stats, :input_bucket) %>
             <div class="flex items-center gap-3">
               <span class="w-20 text-xs text-base-content/60 shrink-0">{label}</span>
               <div class="flex-1 h-2 rounded-full bg-base-300 overflow-hidden">
                 <div
                   class="h-full rounded-full bg-cyan-400 transition-all duration-500"
-                  style={"width: #{bar_width(count, input_max)}%"}
+                  style={"width: #{percentage(count, total)}%"}
                 />
               </div>
               <span class="w-10 text-right font-mono text-xs text-base-content/50">
@@ -185,15 +187,15 @@ defmodule BtcTxFeedWeb.StatsComponents do
           Output count
         </h2>
         <div class="space-y-2.5">
-          <% output_max = bucket_max(@stats, :output_bucket) %>
           <%= for {label, bucket} <- [{"Single", :single}, {"Few (2 - 5)", :few}, {"Many (> 5)", :many}] do %>
             <% count = Map.get(@stats, {:output_bucket, bucket}, 0) %>
+            <% total = bucket_total(@stats, :output_bucket) %>
             <div class="flex items-center gap-3">
               <span class="w-20 text-xs text-base-content/60 shrink-0">{label}</span>
               <div class="flex-1 h-2 rounded-full bg-base-300 overflow-hidden">
                 <div
                   class="h-full rounded-full bg-teal-400 transition-all duration-500"
-                  style={"width: #{bar_width(count, output_max)}%"}
+                  style={"width: #{percentage(count, total)}%"}
                 />
               </div>
               <span class="w-10 text-right font-mono text-xs text-base-content/50">
@@ -219,37 +221,18 @@ defmodule BtcTxFeedWeb.StatsComponents do
     :erlang.float_to_binary(value * 1.0, decimals: 2)
   end
 
-  defp bar_width(_count, 0), do: 0
-  defp bar_width(0, _max), do: 0
+  defp percentage(_count, 0), do: 0
+  defp percentage(count, total), do: Float.round(count / total * 100, 1)
 
-  defp bar_width(count, max) do
-    width = Float.round(count / max * 100, 1)
-    max(width, 0.5)
-  end
-
-  defp tx_type_max(stats) do
-    [:segwit_count, :legacy_count, :coinbase_count]
-    |> Enum.map(&Map.get(stats, &1, 0))
-    |> Enum.max(fn -> 0 end)
-  end
-
-  defp vsize_max(stats) do
+  defp vsize_total(stats) do
     [:tiny, :small, :medium, :large, :oversized]
-    |> Enum.map(&Map.get(stats, {:vsize_bucket, &1}, 0))
-    |> Enum.max(fn -> 0 end)
+    |> Enum.sum_by(&Map.get(stats, {:vsize_bucket, &1}, 0))
   end
 
-  defp script_type_max(stats) do
+  defp script_type_total(stats) do
     stats
     |> Enum.filter(fn {k, _} -> match?({:script_type, _}, k) end)
-    |> Enum.map(fn {_, v} -> v end)
-    |> Enum.max(fn -> 0 end)
-  end
-
-  defp bucket_max(stats, prefix) do
-    [:single, :few, :many]
-    |> Enum.map(&Map.get(stats, {prefix, &1}, 0))
-    |> Enum.max(fn -> 0 end)
+    |> Enum.sum_by(fn {_, v} -> v end)
   end
 
   defp script_type_rows(stats) do
@@ -280,11 +263,9 @@ defmodule BtcTxFeedWeb.StatsComponents do
     |> Enum.sort_by(fn {v, _} -> v end)
   end
 
-  defp version_max(stats) do
-    stats
-    |> Enum.filter(fn {k, _} -> match?({:version, _}, k) end)
-    |> Enum.map(fn {_, count} -> count end)
-    |> Enum.max(fn -> 0 end)
+  defp bucket_total(stats, prefix) do
+    [:single, :few, :many]
+    |> Enum.sum_by(&Map.get(stats, {prefix, &1}, 0))
   end
 
   attr :policy, :map, required: true
