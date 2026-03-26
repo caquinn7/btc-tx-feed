@@ -309,9 +309,19 @@ defmodule BtcTxFeedWeb.StatsComponents do
           <div class="flex items-baseline justify-between py-1.5 border-b border-base-300">
             <span class="text-xs text-base-content/60">{label}</span>
             <span class="font-mono text-xs text-base-content/80">
-              {value}
-              <%= if unit == :bytes do %>
-                <span class="text-base-content/35">B</span>
+              <%= case value do %>
+                <% :none -> %>
+                  <span class="text-base-content/40">unlimited</span>
+                <% {:some, n} -> %>
+                  {n}
+                  <%= if unit == :bytes do %>
+                    <span class="text-base-content/35">B</span>
+                  <% end %>
+                <% n -> %>
+                  {n}
+                  <%= if unit == :bytes do %>
+                    <span class="text-base-content/35">B</span>
+                  <% end %>
               <% end %>
             </span>
           </div>
