@@ -60,7 +60,8 @@ defmodule BtcTxFeedWeb.FailuresLiveTest do
       StatsSessions.finalize!(
         s.id,
         %{total_decoded: 5, total_failed: 1},
-        ~U[2026-01-01 11:00:00Z]
+        ~U[2026-01-01 11:00:00Z],
+        :shutdown
       )
 
       %{session_id: s.id}

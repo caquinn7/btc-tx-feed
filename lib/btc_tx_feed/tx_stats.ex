@@ -84,6 +84,16 @@ defmodule BtcTxFeed.TxStats do
       write_concurrency: true
     ])
 
+    recovered = BtcTxFeed.StatsSessions.recover_orphans!()
+
+    if recovered > 0 do
+      require Logger
+
+      Logger.warning(
+        "TxStats: recovered #{recovered} orphaned session(s) from previous run — shutdown may not have been clean"
+      )
+    end
+
     session =
       BtcTxFeed.StatsSessions.create_open!(DateTime.utc_now(), BtcTxFeed.DecodePolicy.get())
 
@@ -111,7 +121,7 @@ defmodule BtcTxFeed.TxStats do
     counters = Map.new(:ets.tab2list(@table))
 
     try do
-      BtcTxFeed.StatsSessions.finalize!(session_id, counters, DateTime.utc_now())
+      BtcTxFeed.StatsSessions.finalize!(session_id, counters, DateTime.utc_now(), :shutdown)
     rescue
       e -> Logger.error("TxStats: failed to finalize session: #{Exception.message(e)}")
     end

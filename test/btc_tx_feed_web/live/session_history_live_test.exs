@@ -32,7 +32,8 @@ defmodule BtcTxFeedWeb.SessionHistoryLiveTest do
       StatsSessions.finalize!(
         s1.id,
         %{total_decoded: 10, total_failed: 2},
-        ~U[2026-01-01 11:00:00Z]
+        ~U[2026-01-01 11:00:00Z],
+        :shutdown
       )
 
       s2 = StatsSessions.create_open!(~U[2026-01-02 10:00:00Z], %{})
@@ -40,7 +41,8 @@ defmodule BtcTxFeedWeb.SessionHistoryLiveTest do
       StatsSessions.finalize!(
         s2.id,
         %{total_decoded: 5, total_failed: 0},
-        ~U[2026-01-02 11:00:00Z]
+        ~U[2026-01-02 11:00:00Z],
+        :shutdown
       )
 
       {:ok, view, _html} = live(conn, ~p"/analytics/history")
@@ -55,7 +57,8 @@ defmodule BtcTxFeedWeb.SessionHistoryLiveTest do
       StatsSessions.finalize!(
         s.id,
         %{total_decoded: 3, total_failed: 0},
-        ~U[2026-01-01 11:00:00Z]
+        ~U[2026-01-01 11:00:00Z],
+        :shutdown
       )
 
       {:ok, view, _html} = live(conn, ~p"/analytics/history")
@@ -89,7 +92,7 @@ defmodule BtcTxFeedWeb.SessionHistoryLiveTest do
       }
 
       s = StatsSessions.create_open!(~U[2026-01-01 10:00:00Z], policy)
-      StatsSessions.finalize!(s.id, counters, ~U[2026-01-01 11:00:00Z])
+      StatsSessions.finalize!(s.id, counters, ~U[2026-01-01 11:00:00Z], :shutdown)
       [%{id: id}] = BtcTxFeed.StatsSessions.list()
       %{session_id: id}
     end
