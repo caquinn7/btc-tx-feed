@@ -289,6 +289,10 @@ defmodule BtcTxFeedWeb.StatsComponents do
     |> Enum.max(fn -> 0 end)
   end
 
+  defp normalize_limit(:none), do: :none
+  defp normalize_limit({:some, n}), do: n
+  defp normalize_limit(n), do: n
+
   attr :policy, :map, required: true
 
   def decode_policy_limits(assigns) do
@@ -309,14 +313,9 @@ defmodule BtcTxFeedWeb.StatsComponents do
           <div class="flex items-baseline justify-between py-1.5 border-b border-base-300">
             <span class="text-xs text-base-content/60">{label}</span>
             <span class="font-mono text-xs text-base-content/80">
-              <%= case value do %>
+              <%= case normalize_limit(value) do %>
                 <% :none -> %>
                   <span class="text-base-content/40">unlimited</span>
-                <% {:some, n} -> %>
-                  {n}
-                  <%= if unit == :bytes do %>
-                    <span class="text-base-content/35">B</span>
-                  <% end %>
                 <% n -> %>
                   {n}
                   <%= if unit == :bytes do %>
