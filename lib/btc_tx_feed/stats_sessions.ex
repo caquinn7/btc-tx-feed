@@ -19,14 +19,15 @@ defmodule BtcTxFeed.StatsSessions do
   Writes the current `counters_map` to the session row without finalizing it.
   Also updates the `total_decoded` and `total_failed` denormalized columns.
   Intended to be called periodically so that counter data survives an unclean
-  shutdown.
+  shutdown. Only updates open sessions (those with `ended_at IS NULL`), so a
+  stale flush after finalization is a safe no-op.
   """
   def checkpoint!(id, counters_map) do
     total_decoded = Map.get(counters_map, :total_decoded, 0)
     total_failed = Map.get(counters_map, :total_failed, 0)
 
     Repo.update_all(
-      from(s in StatsSession, where: s.id == ^id),
+      from(s in StatsSession, where: s.id == ^id and is_nil(s.ended_at)),
       set: [
         counters: :erlang.term_to_binary(counters_map),
         total_decoded: total_decoded,

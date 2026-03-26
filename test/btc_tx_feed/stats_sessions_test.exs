@@ -209,6 +209,22 @@ defmodule BtcTxFeed.StatsSessionsTest do
       assert row.total_failed == 1
       assert row.ended_at == nil
     end
+
+    test "is a no-op on a finalized session" do
+      s = StatsSessions.create_open!(~U[2026-01-01 10:00:00Z], %{})
+
+      StatsSessions.finalize!(
+        s.id,
+        %{total_decoded: 99, total_failed: 0},
+        ~U[2026-01-01 11:00:00Z],
+        :shutdown
+      )
+
+      assert :ok = StatsSessions.checkpoint!(s.id, %{total_decoded: 0, total_failed: 0})
+
+      row = Repo.get!(StatsSession, s.id)
+      assert row.total_decoded == 99
+    end
   end
 
   describe "finalize!/4 with :startup_recovery" do
