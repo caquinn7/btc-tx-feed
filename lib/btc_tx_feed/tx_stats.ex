@@ -8,6 +8,7 @@ defmodule BtcTxFeed.TxStats do
   use GenServer
 
   @table :tx_stats
+  @flush_interval :timer.minutes(5)
 
   # ---------------------------------------------------------------------------
   # Public API
@@ -83,8 +84,20 @@ defmodule BtcTxFeed.TxStats do
       write_concurrency: true
     ])
 
+    recovered = BtcTxFeed.StatsSessions.recover_orphans!()
+
+    if recovered > 0 do
+      require Logger
+
+      Logger.warning(
+        "TxStats: recovered #{recovered} orphaned session(s) from previous run — shutdown may not have been clean"
+      )
+    end
+
     session =
       BtcTxFeed.StatsSessions.create_open!(DateTime.utc_now(), BtcTxFeed.DecodePolicy.get())
+
+    :timer.send_interval(@flush_interval, :flush)
 
     {:ok, %{started_at: session.started_at, session_id: session.id}}
   end
@@ -95,13 +108,28 @@ defmodule BtcTxFeed.TxStats do
   end
 
   @impl true
+  def handle_info(:flush, state) do
+    counters = Map.new(:ets.tab2list(@table))
+
+    try do
+      BtcTxFeed.StatsSessions.checkpoint!(state.session_id, counters)
+    rescue
+      e ->
+        require Logger
+        Logger.warning("TxStats: checkpoint failed: #{Exception.message(e)}")
+    end
+
+    {:noreply, state}
+  end
+
+  @impl true
   def terminate(reason, %{started_at: _started_at, session_id: session_id}) do
     require Logger
     Logger.info("TxStats: terminate/2 called (#{inspect(reason)}), finalizing session")
     counters = Map.new(:ets.tab2list(@table))
 
     try do
-      BtcTxFeed.StatsSessions.finalize!(session_id, counters, DateTime.utc_now())
+      BtcTxFeed.StatsSessions.finalize!(session_id, counters, DateTime.utc_now(), :shutdown)
     rescue
       e -> Logger.error("TxStats: failed to finalize session: #{Exception.message(e)}")
     end

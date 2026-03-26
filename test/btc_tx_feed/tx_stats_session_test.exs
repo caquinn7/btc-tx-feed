@@ -106,4 +106,42 @@ defmodule BtcTxFeed.TxStatsSessionTest do
       assert counters[:segwit_count] == 1
     end
   end
+
+  describe "handle_info(:flush, ...)" do
+    test "checkpoints current counters to the DB without finalizing the session" do
+      start_supervised!(TxStats)
+
+      TxStats.record(base_details())
+      TxStats.record(base_details(%{is_segwit: true}))
+      TxStats.record_failure()
+
+      # Trigger flush synchronously and wait for it to be processed
+      send(TxStats, :flush)
+      _ = :sys.get_state(TxStats)
+
+      [session] = Repo.all(StatsSession)
+      assert session.ended_at == nil
+      assert session.total_decoded == 2
+      assert session.total_failed == 1
+
+      counters = :erlang.binary_to_term(session.counters)
+      assert counters[:segwit_count] == 1
+    end
+
+    test "checkpoint is a no-op after the session is finalized" do
+      start_supervised!(TxStats)
+
+      TxStats.record(base_details())
+      stop_supervised!(TxStats)
+
+      [session] = Repo.all(StatsSession)
+      finalized_total = session.total_decoded
+
+      # A stale flush arriving after finalization must not overwrite the row
+      BtcTxFeed.StatsSessions.checkpoint!(session.id, %{total_decoded: 0, total_failed: 0})
+
+      [session_after] = Repo.all(StatsSession)
+      assert session_after.total_decoded == finalized_total
+    end
+  end
 end

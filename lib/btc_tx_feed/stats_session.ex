@@ -8,5 +8,6 @@ defmodule BtcTxFeed.StatsSession do
     field(:decode_policy, :binary)
     field(:total_decoded, :integer)
     field(:total_failed, :integer)
+    field(:end_reason, :string)
   end
 end
