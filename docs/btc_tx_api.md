@@ -218,11 +218,11 @@ end
 
 ## Consensus validation
 
-### `validate_consensus(tx :: transaction(unvalidated)) :: {:ok, transaction(validated)} | {:error, [validation_error()]}`
+### `validate_consensus(tx :: transaction(unvalidated)) :: {:ok, transaction(validated)} | {:error, [consensus_violation()]}`
 
 Checks a parsed transaction against Bitcoin consensus rules. Returns an `{:ok,
 validated_tx}` on success or `{:error, errors}` where `errors` is a list
-containing one or more `validation_error()` values (all detected errors are
+containing one or more `consensus_violation()` values (all detected errors are
 collected, not just the first).
 
 Rules checked:
@@ -235,7 +235,7 @@ Rules checked:
 
 Script execution and signature verification are **not** performed.
 
-### `validation_error()` variants
+### `consensus_violation()` variants
 
 | Variant | Meaning |
 |---|---|
@@ -312,8 +312,8 @@ following field values:
 | `max_vin_count` | `100_000` | Maximum number of inputs |
 | `max_vout_count` | `100_000` | Maximum number of outputs |
 | `max_script_size` | `10_000` | Maximum bytes for any single script (`scriptSig` or `scriptPubKey`) |
-| `max_witness_items_per_input` | `10_000` | Maximum witness stack items per input |
-| `max_witness_size_per_input` | `100_000` | Maximum total witness size in bytes per input |
+| `max_witness_items_per_input` | `None` | Maximum witness stack items per input; `None` disables this limit |
+| `max_witness_size_per_input` | `None` | Maximum total witness bytes per input; `None` disables this limit |
 
 ### Constructing a custom policy from Elixir
 
@@ -321,9 +321,10 @@ following field values:
 construct one from Elixir:
 
 ```elixir
-policy = {:decode_policy, 400_000, 100, 100, 1_000, 10_000, 10_000}
+policy = {:decode_policy, 400_000, 100, 100, 1_000, {:some, 500}, {:some, 50_000}}
 # {max_tx_size, max_vin_count, max_vout_count, max_script_size,
 #  max_witness_items_per_input, max_witness_size_per_input}
+# Use :none to disable an optional witness limit.
 
 {:ok, tx} = :btc_tx.decode_with_policy(raw_bytes, policy)
 ```
@@ -394,4 +395,4 @@ structure the error occurred, e.g.:
 `:version`, `:lock_time`, `:segwit_discriminator`, `:segwit_marker`,
 `:vin_count`, `:prev_tx_id`, `:vout`, `:script_sig`, `:script_sig_length`,
 `:sequence`, `:vout_count`, `:value`, `:script_pub_key`, `:script_pub_key_length`,
-`:witness_stack_length`, `:witness_item_length`, `:witness_stack_total_payload_bytes`
+`:witness_stack_length`, `:witness_item_length`, `:witness_items_total_bytes`

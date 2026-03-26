@@ -16,8 +16,8 @@ defmodule BtcTxFeed.DecodePolicy do
     max_vin_count: 100_000,
     max_vout_count: 100_000,
     max_script_size: 10_000,
-    max_witness_items_per_input: 10_000,
-    max_witness_size_per_input: 100_000
+    max_witness_items_per_input: :none,
+    max_witness_size_per_input: :none
   }
 
   @doc "Returns the active policy as a map, merging app config over the defaults."
