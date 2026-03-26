@@ -110,7 +110,15 @@ defmodule BtcTxFeed.TxStats do
   @impl true
   def handle_info(:flush, state) do
     counters = Map.new(:ets.tab2list(@table))
-    BtcTxFeed.StatsSessions.checkpoint!(state.session_id, counters)
+
+    try do
+      BtcTxFeed.StatsSessions.checkpoint!(state.session_id, counters)
+    rescue
+      e ->
+        require Logger
+        Logger.warning("TxStats: checkpoint failed: #{Exception.message(e)}")
+    end
+
     {:noreply, state}
   end
 
