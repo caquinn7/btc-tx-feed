@@ -8,6 +8,7 @@ defmodule BtcTxFeed.TxStats do
   use GenServer
 
   @table :tx_stats
+  @flush_interval :timer.minutes(5)
 
   # ---------------------------------------------------------------------------
   # Public API
@@ -86,12 +87,21 @@ defmodule BtcTxFeed.TxStats do
     session =
       BtcTxFeed.StatsSessions.create_open!(DateTime.utc_now(), BtcTxFeed.DecodePolicy.get())
 
+    :timer.send_interval(@flush_interval, :flush)
+
     {:ok, %{started_at: session.started_at, session_id: session.id}}
   end
 
   @impl true
   def handle_call(:get_session_id, _from, state) do
     {:reply, state.session_id, state}
+  end
+
+  @impl true
+  def handle_info(:flush, state) do
+    counters = Map.new(:ets.tab2list(@table))
+    BtcTxFeed.StatsSessions.checkpoint!(state.session_id, counters)
+    {:noreply, state}
   end
 
   @impl true

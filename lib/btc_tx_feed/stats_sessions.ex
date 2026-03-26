@@ -10,6 +10,22 @@ defmodule BtcTxFeed.StatsSessions do
     })
   end
 
+  def checkpoint!(id, counters_map) do
+    total_decoded = Map.get(counters_map, :total_decoded, 0)
+    total_failed = Map.get(counters_map, :total_failed, 0)
+
+    Repo.update_all(
+      from(s in StatsSession, where: s.id == ^id),
+      set: [
+        counters: :erlang.term_to_binary(counters_map),
+        total_decoded: total_decoded,
+        total_failed: total_failed
+      ]
+    )
+
+    :ok
+  end
+
   def finalize!(id, counters_map, %DateTime{} = ended_at) do
     total_decoded = Map.get(counters_map, :total_decoded, 0)
     total_failed = Map.get(counters_map, :total_failed, 0)
