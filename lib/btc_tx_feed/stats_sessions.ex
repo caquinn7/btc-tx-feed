@@ -80,12 +80,12 @@ defmodule BtcTxFeed.StatsSessions do
 
     now = DateTime.utc_now()
 
-    for %{id: id, counters: raw_counters} <- orphans do
+    Enum.each(orphans, fn %{id: id, counters: raw_counters} ->
       counters =
         if raw_counters, do: :erlang.binary_to_term(raw_counters), else: %{}
 
       finalize!(id, counters, now, :startup_recovery)
-    end
+    end)
 
     length(orphans)
   end
