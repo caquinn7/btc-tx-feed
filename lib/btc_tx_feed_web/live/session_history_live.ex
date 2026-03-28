@@ -108,7 +108,7 @@ defmodule BtcTxFeedWeb.SessionHistoryLive do
               <span>Started: {format_datetime(@session.started_at)}</span>
               <span>Duration: {format_duration(@session.started_at, @session.ended_at)}</span>
               <.link
-                navigate={~p"/analytics/failures?session_id=#{@session.id}"}
+                navigate={~p"/analytics/failures/decode?session_id=#{@session.id}"}
                 class="hover:text-bitcoin transition-colors"
               >
                 {@session.total_failed} decode {if @session.total_failed == 1,

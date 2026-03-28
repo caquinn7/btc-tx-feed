@@ -241,11 +241,11 @@ Script execution and signature verification are **not** performed.
 |---|---|
 | `:no_inputs` | Transaction has no inputs |
 | `:no_outputs` | Transaction has no outputs |
-| `{:output_value_out_of_range, index: i, value: v}` | Output `i` has an out-of-range value |
-| `{:total_output_value_out_of_range, index: i, total: t}` | Running output sum exceeded MAX_MONEY at output `i` |
+| `{:output_value_out_of_range, index: integer(), value: integer()}` | Output at `index` has an out-of-range value |
+| `{:total_output_value_out_of_range, index: integer(), total: integer()}` | Running output sum exceeded MAX_MONEY at output `index` |
 | `:coinbase_with_multiple_inputs` | Coinbase transaction has more than one input |
 | `:invalid_coinbase_script_sig_length` | Coinbase scriptSig length is not between 2 and 100 bytes |
-
+| `{:duplicate_input, prev_out: prevout(), first_index: integer(), duplicate_index: integer()}` | Two inputs reference the same previous output; `prev_out` is the duplicated outpoint, `first_index` is its first occurrence, `duplicate_index` is the later duplicate |
 ---
 
 ## Serialization and transaction IDs

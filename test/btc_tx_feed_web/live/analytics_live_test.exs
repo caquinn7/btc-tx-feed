@@ -16,6 +16,6 @@ defmodule BtcTxFeedWeb.AnalyticsLiveTest do
     session_id = TxStats.get_session_id()
     {:ok, view, _html} = live(conn, ~p"/analytics")
 
-    assert has_element?(view, "a[href='/analytics/failures?session_id=#{session_id}']")
+    assert has_element?(view, "a[href='/analytics/failures/decode?session_id=#{session_id}']")
   end
 end

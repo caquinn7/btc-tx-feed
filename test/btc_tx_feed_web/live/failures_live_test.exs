@@ -1,4 +1,4 @@
-defmodule BtcTxFeedWeb.FailuresLiveTest do
+defmodule BtcTxFeedWeb.DecodeFailuresLiveTest do
   use BtcTxFeedWeb.ConnCase, async: false
 
   import Phoenix.LiveViewTest
@@ -13,12 +13,12 @@ defmodule BtcTxFeedWeb.FailuresLiveTest do
 
   describe "without ?session_id param" do
     test "renders the failures container", %{conn: conn} do
-      {:ok, view, _html} = live(conn, ~p"/analytics/failures")
+      {:ok, view, _html} = live(conn, ~p"/analytics/failures/decode")
       assert has_element?(view, "#failures")
     end
 
     test "back link navigates to /analytics", %{conn: conn} do
-      {:ok, view, _html} = live(conn, ~p"/analytics/failures")
+      {:ok, view, _html} = live(conn, ~p"/analytics/failures/decode")
       assert has_element?(view, "a[href='/analytics']")
     end
   end
@@ -30,22 +30,22 @@ defmodule BtcTxFeedWeb.FailuresLiveTest do
     end
 
     test "renders the failures container", %{conn: conn, session: session} do
-      {:ok, view, _html} = live(conn, ~p"/analytics/failures?session_id=#{session.id}")
+      {:ok, view, _html} = live(conn, ~p"/analytics/failures/decode?session_id=#{session.id}")
       assert has_element?(view, "#failures")
     end
 
     test "back link navigates to /analytics for an open session", %{conn: conn, session: session} do
-      {:ok, view, _html} = live(conn, ~p"/analytics/failures?session_id=#{session.id}")
+      {:ok, view, _html} = live(conn, ~p"/analytics/failures/decode?session_id=#{session.id}")
       assert has_element?(view, "a[href='/analytics']")
     end
 
     test "only shows failures from the given session", %{conn: conn, session: session} do
-      FailureStore.insert("tx-in-session", <<1>>, :err, session.id)
+      FailureStore.insert_decode_failure("tx-in-session", <<1>>, :err, session.id)
 
       other = StatsSessions.create_open!(DateTime.utc_now(), %{})
-      FailureStore.insert("tx-other", <<2>>, :err, other.id)
+      FailureStore.insert_decode_failure("tx-other", <<2>>, :err, other.id)
 
-      {:ok, view, _html} = live(conn, ~p"/analytics/failures?session_id=#{session.id}")
+      {:ok, view, _html} = live(conn, ~p"/analytics/failures/decode?session_id=#{session.id}")
 
       html = render(view)
       assert html =~ "tx-in-session"
@@ -68,7 +68,7 @@ defmodule BtcTxFeedWeb.FailuresLiveTest do
     end
 
     test "renders the failures container", %{conn: conn, session_id: id} do
-      {:ok, view, _html} = live(conn, ~p"/analytics/failures?session_id=#{id}")
+      {:ok, view, _html} = live(conn, ~p"/analytics/failures/decode?session_id=#{id}")
       assert has_element?(view, "#failures")
     end
 
@@ -76,7 +76,7 @@ defmodule BtcTxFeedWeb.FailuresLiveTest do
       conn: conn,
       session_id: id
     } do
-      {:ok, view, _html} = live(conn, ~p"/analytics/failures?session_id=#{id}")
+      {:ok, view, _html} = live(conn, ~p"/analytics/failures/decode?session_id=#{id}")
       assert has_element?(view, "a[href='/analytics/history/#{id}']")
     end
   end
@@ -84,7 +84,7 @@ defmodule BtcTxFeedWeb.FailuresLiveTest do
   describe "with an invalid ?session_id param" do
     test "redirects to /analytics", %{conn: conn} do
       assert {:error, {:live_redirect, %{to: "/analytics"}}} =
-               live(conn, ~p"/analytics/failures?session_id=notanumber")
+               live(conn, ~p"/analytics/failures/decode?session_id=notanumber")
     end
   end
 end

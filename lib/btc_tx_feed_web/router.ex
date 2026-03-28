@@ -19,7 +19,8 @@ defmodule BtcTxFeedWeb.Router do
 
     live "/", MempoolLive
     live "/analytics", AnalyticsLive
-    live "/analytics/failures", FailuresLive
+    live "/analytics/failures/decode", DecodeFailuresLive
+    live "/analytics/failures/consensus", ConsensusViolationsLive
     live "/analytics/history", SessionHistoryLive, :index
     live "/analytics/history/:id", SessionHistoryLive, :show
   end

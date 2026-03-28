@@ -47,6 +47,7 @@ defmodule BtcTxFeed.TxParser do
 
         Map.merge(base, %{
           validated: true,
+          validation_errors: [],
           txid: be_hex(:btc_tx.compute_txid(validated)),
           wtxid: be_hex(:btc_tx.compute_wtxid(validated)),
           base_size: base_size,
@@ -55,8 +56,10 @@ defmodule BtcTxFeed.TxParser do
           vsize: vsize
         })
 
-      {:error, _validation_errors} ->
-        Map.put(base, :validated, false)
+      {:error, validation_errors} ->
+        base
+        |> Map.put(:validated, false)
+        |> Map.put(:validation_errors, validation_errors)
     end
   end
 
