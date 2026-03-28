@@ -53,16 +53,16 @@ defmodule BtcTxFeedWeb.DecodeFailuresLive do
       <div class="max-w-4xl mx-auto">
         <%!-- Page header --%>
         <div class="mb-8">
-          <div class="flex items-center gap-3 mb-1">
+          <div class="flex items-center justify-between mb-1">
+            <h1 class="text-2xl font-bold tracking-tight">Decode Failures</h1>
             <.link
               navigate={@back_path}
-              class="text-base-content/50 hover:text-bitcoin transition-colors"
+              class="text-sm text-base-content/50 hover:text-bitcoin transition-colors cursor-pointer"
             >
-              <.icon name="hero-arrow-left" class="text-xl" />
+              &larr; Back to live session
             </.link>
-            <h1 class="text-2xl font-bold tracking-tight">Decode Failures</h1>
           </div>
-          <p class="text-sm text-base-content/50 ml-7">
+          <p class="text-sm text-base-content/50">
             <%= if @scoped? do %>
               Transactions that failed to decode in this session.
             <% else %>

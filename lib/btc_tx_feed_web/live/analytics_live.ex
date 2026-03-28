@@ -27,34 +27,32 @@ defmodule BtcTxFeedWeb.AnalyticsLive do
       <div class="max-w-4xl mx-auto space-y-8">
         <%!-- Page header --%>
         <div>
-          <div class="flex items-center justify-between mb-1">
-            <p class="text text-base-content">
-              Live aggregate stats from the background sampling pipeline.
-            </p>
-            <div class="flex items-center gap-4">
-              <% failed = Map.get(@stats, :total_failed, 0) %>
-              <.link
-                navigate={~p"/analytics/failures/decode?session_id=#{@session_id}"}
-                class="text-sm text-base-content/50 hover:text-bitcoin transition-colors"
-              >
-                {failed} decode {if failed == 1, do: "failure", else: "failures"} &rarr;
-              </.link>
-              <% consensus_failed = Map.get(@stats, :validation_failure_count, 0) %>
-              <.link
-                navigate={~p"/analytics/failures/consensus?session_id=#{@session_id}"}
-                class="text-sm text-base-content/50 hover:text-bitcoin transition-colors"
-              >
-                {consensus_failed} consensus {if consensus_failed == 1,
-                  do: "violation",
-                  else: "violations"} &rarr;
-              </.link>
-              <.link
-                navigate={~p"/analytics/history"}
-                class="text-sm text-base-content/50 hover:text-bitcoin transition-colors"
-              >
-                Session history &rarr;
-              </.link>
-            </div>
+          <p class="text text-base-content mb-2">
+            Live aggregate stats from the background sampling pipeline.
+          </p>
+          <div class="flex items-center gap-4">
+            <% failed = Map.get(@stats, :total_failed, 0) %>
+            <.link
+              navigate={~p"/analytics/failures/decode?session_id=#{@session_id}"}
+              class="text-sm text-base-content/50 hover:text-bitcoin transition-colors cursor-pointer"
+            >
+              {failed} decode {if failed == 1, do: "failure", else: "failures"} &rarr;
+            </.link>
+            <% consensus_failed = Map.get(@stats, :validation_failure_count, 0) %>
+            <.link
+              navigate={~p"/analytics/failures/consensus?session_id=#{@session_id}"}
+              class="text-sm text-base-content/50 hover:text-bitcoin transition-colors cursor-pointer"
+            >
+              {consensus_failed} consensus {if consensus_failed == 1,
+                do: "violation",
+                else: "violations"} &rarr;
+            </.link>
+            <.link
+              navigate={~p"/analytics/history"}
+              class="text-sm text-base-content/50 hover:text-bitcoin transition-colors cursor-pointer"
+            >
+              Session history &rarr;
+            </.link>
           </div>
         </div>
 
