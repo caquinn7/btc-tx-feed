@@ -10,12 +10,15 @@ defmodule BtcTxFeedWeb.ConsensusViolationsLive do
         session = StatsSessions.get!(session_id)
         violations = FailureStore.list_consensus_violations_for_session(session_id)
 
-        back_path =
-          if session.ended_at, do: ~p"/analytics/history/#{session_id}", else: ~p"/analytics"
+        {back_path, back_label} =
+          if session.ended_at,
+            do: {~p"/analytics/history/#{session_id}", "Back to session"},
+            else: {~p"/analytics", "Back to live session"}
 
         socket =
           socket
           |> assign(:back_path, back_path)
+          |> assign(:back_label, back_label)
           |> assign(:scoped?, true)
           |> stream(:violations, violations)
 
@@ -27,6 +30,7 @@ defmodule BtcTxFeedWeb.ConsensusViolationsLive do
         socket =
           socket
           |> assign(:back_path, ~p"/analytics")
+          |> assign(:back_label, "Back to live session")
           |> assign(:scoped?, false)
           |> stream(:violations, violations)
 
@@ -59,7 +63,7 @@ defmodule BtcTxFeedWeb.ConsensusViolationsLive do
               navigate={@back_path}
               class="text-sm text-base-content/50 hover:text-bitcoin transition-colors cursor-pointer"
             >
-              &larr; Back to live session
+              &larr; {@back_label}
             </.link>
           </div>
           <p class="text-sm text-base-content/50">
