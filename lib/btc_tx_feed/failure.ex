@@ -6,6 +6,7 @@ defmodule BtcTxFeed.Failure do
     field(:raw_hex, :string)
     field(:error_reason, :string)
     field(:stats_session_id, :integer)
+    field(:failure_type, :string)
 
     timestamps(updated_at: false)
   end

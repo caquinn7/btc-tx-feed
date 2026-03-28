@@ -128,7 +128,7 @@ defmodule BtcTxFeedWeb.SessionHistoryLiveTest do
     test "renders a failures link with the correct session_id", %{conn: conn, session_id: id} do
       {:ok, view, _html} = live(conn, ~p"/analytics/history/#{id}")
 
-      assert has_element?(view, "a[href='/analytics/failures?session_id=#{id}']")
+      assert has_element?(view, "a[href='/analytics/failures/decode?session_id=#{id}']")
     end
 
     test "renders the decode policy limits section", %{conn: conn, session_id: id} do

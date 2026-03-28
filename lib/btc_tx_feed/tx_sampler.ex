@@ -89,14 +89,29 @@ defmodule BtcTxFeed.TxSampler do
             {:ok, details} ->
               TxStats.record(details)
 
+              if not details.validated do
+                FailureStore.insert_consensus_failure(
+                  txid,
+                  raw,
+                  details.validation_errors,
+                  TxStats.get_session_id()
+                )
+              end
+
             {:error, reason} ->
               TxStats.record_failure()
-              FailureStore.insert(txid, raw, reason, TxStats.get_session_id())
+              FailureStore.insert_decode_failure(txid, raw, reason, TxStats.get_session_id())
           end
         rescue
           e ->
             TxStats.record_failure()
-            FailureStore.insert(txid, raw, Exception.message(e), TxStats.get_session_id())
+
+            FailureStore.insert_decode_failure(
+              txid,
+              raw,
+              Exception.message(e),
+              TxStats.get_session_id()
+            )
         end
 
       {:error, {:http_error, 429}} ->

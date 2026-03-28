@@ -1,4 +1,4 @@
-defmodule BtcTxFeedWeb.FailuresLive do
+defmodule BtcTxFeedWeb.DecodeFailuresLive do
   use BtcTxFeedWeb, :live_view
 
   alias BtcTxFeed.{FailureStore, StatsSessions}
@@ -8,25 +8,29 @@ defmodule BtcTxFeedWeb.FailuresLive do
     case parse_session_id(params["session_id"]) do
       {:ok, session_id} ->
         session = StatsSessions.get!(session_id)
-        failures = FailureStore.list_for_session(session_id)
+        failures = FailureStore.list_decode_failures_for_session(session_id)
 
-        back_path =
-          if session.ended_at, do: ~p"/analytics/history/#{session_id}", else: ~p"/analytics"
+        {back_path, back_label} =
+          if session.ended_at,
+            do: {~p"/analytics/history/#{session_id}", "Back to session"},
+            else: {~p"/analytics", "Back to live session"}
 
         socket =
           socket
           |> assign(:back_path, back_path)
+          |> assign(:back_label, back_label)
           |> assign(:scoped?, true)
           |> stream(:failures, failures)
 
         {:ok, socket}
 
       :no_param ->
-        failures = FailureStore.list_recent(50)
+        failures = FailureStore.list_decode_failures_recent(50)
 
         socket =
           socket
           |> assign(:back_path, ~p"/analytics")
+          |> assign(:back_label, "Back to live session")
           |> assign(:scoped?, false)
           |> stream(:failures, failures)
 
@@ -49,20 +53,20 @@ defmodule BtcTxFeedWeb.FailuresLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_path={~p"/analytics/failures"}>
+    <Layouts.app flash={@flash} current_path={~p"/analytics/failures/decode"}>
       <div class="max-w-4xl mx-auto">
         <%!-- Page header --%>
         <div class="mb-8">
-          <div class="flex items-center gap-3 mb-1">
+          <div class="flex items-center justify-between mb-1">
+            <h1 class="text-2xl font-bold tracking-tight">Decode Failures</h1>
             <.link
               navigate={@back_path}
-              class="text-base-content/50 hover:text-bitcoin transition-colors"
+              class="text-sm text-base-content/50 hover:text-bitcoin transition-colors cursor-pointer"
             >
-              <.icon name="hero-arrow-left" class="text-xl" />
+              &larr; {@back_label}
             </.link>
-            <h1 class="text-2xl font-bold tracking-tight">Decode Failures</h1>
           </div>
-          <p class="text-sm text-base-content/50 ml-7">
+          <p class="text-sm text-base-content/50">
             <%= if @scoped? do %>
               Transactions that failed to decode in this session.
             <% else %>

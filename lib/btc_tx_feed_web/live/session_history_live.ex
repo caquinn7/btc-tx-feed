@@ -97,23 +97,36 @@ defmodule BtcTxFeedWeb.SessionHistoryLive do
       <% else %>
         <div class="max-w-4xl mx-auto space-y-8">
           <%!-- Breadcrumb + metadata --%>
-          <div class="flex items-center justify-between">
-            <.link
-              navigate={~p"/analytics/history"}
-              class="text-sm text-base-content/50 hover:text-bitcoin transition-colors"
-            >
-              &larr; Back to history
-            </.link>
-            <div class="flex items-center gap-6 text-xs text-base-content/40 font-mono">
-              <span>Started: {format_datetime(@session.started_at)}</span>
-              <span>Duration: {format_duration(@session.started_at, @session.ended_at)}</span>
+          <div>
+            <div class="flex items-center justify-between mb-2">
               <.link
-                navigate={~p"/analytics/failures?session_id=#{@session.id}"}
-                class="hover:text-bitcoin transition-colors"
+                navigate={~p"/analytics/history"}
+                class="text-sm text-base-content/50 hover:text-bitcoin transition-colors"
+              >
+                &larr; Back to history
+              </.link>
+              <div class="flex items-center gap-6 text-xs text-base-content/40 font-mono">
+                <span>Started: {format_datetime(@session.started_at)}</span>
+                <span>Duration: {format_duration(@session.started_at, @session.ended_at)}</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-4">
+              <.link
+                navigate={~p"/analytics/failures/decode?session_id=#{@session.id}"}
+                class="text-sm text-base-content/50 hover:text-bitcoin transition-colors cursor-pointer"
               >
                 {@session.total_failed} decode {if @session.total_failed == 1,
                   do: "failure",
                   else: "failures"} &rarr;
+              </.link>
+              <% consensus_failed = Map.get(@session.counters, :validation_failure_count, 0) %>
+              <.link
+                navigate={~p"/analytics/failures/consensus?session_id=#{@session.id}"}
+                class="text-sm text-base-content/50 hover:text-bitcoin transition-colors cursor-pointer"
+              >
+                {consensus_failed} consensus {if consensus_failed == 1,
+                  do: "violation",
+                  else: "violations"} &rarr;
               </.link>
             </div>
           </div>
