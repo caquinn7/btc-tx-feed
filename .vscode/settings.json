@@ -1,0 +1,13 @@
+{
+  "elixirLS.dialyzerEnabled": true,
+  "elixirLS.suggestSpecs": true,
+  "elixirLS.mixEnv": "dev",
+  "elixirLS.envVariables": {
+    "MIX_BUILD_PATH": "_build"
+  },
+  "[elixir]": {
+    "editor.defaultFormatter": "JakeBecker.elixir-ls",
+    "editor.formatOnSave": true,
+    "editor.codeLens": true
+  }
+}
