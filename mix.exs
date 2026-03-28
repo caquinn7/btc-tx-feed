@@ -98,7 +98,12 @@ defmodule BtcTxFeed.MixProject do
         "phx.digest"
       ],
       precommit: ["compile --warnings-as-errors", "deps.unlock --unused", "format", "test"],
-      "deps.get": ["deps.get", "gleam.deps.get"]
+      "deps.get": ["deps.get", "gleam.deps.get", fn _ -> File.rm_rf!("deps/btc_tx/test") end],
+      "deps.update": [
+        "deps.update",
+        "gleam.deps.get",
+        fn _ -> File.rm_rf!("deps/btc_tx/test") end
+      ]
     ]
   end
 end
