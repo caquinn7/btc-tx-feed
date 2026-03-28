@@ -1,5 +1,5 @@
 {
-  "elixirLS.dialyzerEnabled": false,
+  "elixirLS.dialyzerEnabled": true,
   "elixirLS.suggestSpecs": true,
   "elixirLS.mixEnv": "dev",
   "elixirLS.envVariables": {
@@ -7,6 +7,7 @@
   },
   "[elixir]": {
     "editor.defaultFormatter": "JakeBecker.elixir-ls",
-    "editor.formatOnSave": true
+    "editor.formatOnSave": true,
+    "editor.codeLens": true
   }
 }
