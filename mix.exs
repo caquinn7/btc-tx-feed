@@ -98,12 +98,16 @@ defmodule BtcTxFeed.MixProject do
         "phx.digest"
       ],
       precommit: ["compile --warnings-as-errors", "deps.unlock --unused", "format", "test"],
-      "deps.get": ["deps.get", "gleam.deps.get", fn _ -> File.rm_rf!("deps/btc_tx/test") end],
+      "deps.get": ["deps.get", "gleam.deps.get", &prune_btc_tx_test/1],
       "deps.update": [
         "deps.update",
         "gleam.deps.get",
-        fn _ -> File.rm_rf!("deps/btc_tx/test") end
+        &prune_btc_tx_test/1
       ]
     ]
+  end
+
+  defp prune_btc_tx_test(_args) do
+    File.rm_rf!(Path.join(["deps", "btc_tx", "test"]))
   end
 end
