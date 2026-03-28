@@ -119,6 +119,15 @@ defmodule BtcTxFeedWeb.SessionHistoryLive do
                   do: "failure",
                   else: "failures"} &rarr;
               </.link>
+              <% consensus_failed = Map.get(@session.counters, :validation_failure_count, 0) %>
+              <.link
+                navigate={~p"/analytics/failures/consensus?session_id=#{@session.id}"}
+                class="text-sm text-base-content/50 hover:text-bitcoin transition-colors cursor-pointer"
+              >
+                {consensus_failed} consensus {if consensus_failed == 1,
+                  do: "violation",
+                  else: "violations"} &rarr;
+              </.link>
             </div>
           </div>
 
