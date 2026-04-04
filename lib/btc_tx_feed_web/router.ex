@@ -18,6 +18,7 @@ defmodule BtcTxFeedWeb.Router do
     pipe_through :browser
 
     live "/", MempoolLive
+    live "/tx", TxLookupLive
     live "/analytics", AnalyticsLive
     live "/analytics/failures/decode", DecodeFailuresLive
     live "/analytics/failures/consensus", ConsensusViolationsLive
