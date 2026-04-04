@@ -55,6 +55,11 @@ defmodule BtcTxFeedWeb.TxLookupLive do
     {:noreply, socket}
   end
 
+  # Stale result from a previous task whose ref was replaced — discard it.
+  def handle_info({_ref, _result}, socket) do
+    {:noreply, socket}
+  end
+
   @impl true
   def handle_info({:DOWN, _ref, :process, _pid, _reason}, socket) do
     {:noreply, socket}
@@ -67,6 +72,10 @@ defmodule BtcTxFeedWeb.TxLookupLive do
   end
 
   defp start_fetch(socket, txid) do
+    if socket.assigns.task_ref do
+      Process.demonitor(socket.assigns.task_ref, [:flush])
+    end
+
     task =
       Task.async(fn ->
         case MempoolHttpClient.get_raw_tx(txid) do
