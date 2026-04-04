@@ -29,7 +29,18 @@ defmodule BtcTxFeedWeb.TxLookupLive do
   end
 
   def handle_params(_params, _uri, socket) do
-    {:noreply, assign(socket, :form, to_form(%{"txid" => ""}, as: :lookup))}
+    if socket.assigns.task_ref do
+      Process.demonitor(socket.assigns.task_ref, [:flush])
+    end
+
+    socket =
+      socket
+      |> assign(:form, to_form(%{"txid" => ""}, as: :lookup))
+      |> assign(:tx_details, nil)
+      |> assign(:searched_txid, nil)
+      |> assign(:task_ref, nil)
+
+    {:noreply, socket}
   end
 
   @impl true
