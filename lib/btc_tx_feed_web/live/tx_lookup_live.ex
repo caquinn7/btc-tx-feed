@@ -9,12 +9,27 @@ defmodule BtcTxFeedWeb.TxLookupLive do
   def mount(_params, _session, socket) do
     socket =
       socket
-      |> assign(:form, to_form(%{"txid" => ""}, as: :lookup))
       |> assign(:tx_details, nil)
       |> assign(:searched_txid, nil)
       |> assign(:task_ref, nil)
 
     {:ok, socket}
+  end
+
+  @impl true
+  def handle_params(%{"txid" => txid}, _uri, socket) do
+    txid = String.trim(txid)
+
+    socket =
+      socket
+      |> assign(:form, to_form(%{"txid" => txid}, as: :lookup))
+      |> start_fetch(txid)
+
+    {:noreply, socket}
+  end
+
+  def handle_params(_params, _uri, socket) do
+    {:noreply, assign(socket, :form, to_form(%{"txid" => ""}, as: :lookup))}
   end
 
   @impl true
@@ -37,7 +52,10 @@ defmodule BtcTxFeedWeb.TxLookupLive do
   @impl true
   def handle_event("lookup", %{"lookup" => %{"txid" => txid}}, socket) do
     txid = String.trim(txid)
+    {:noreply, push_patch(socket, to: ~p"/tx/#{txid}")}
+  end
 
+  defp start_fetch(socket, txid) do
     task =
       Task.async(fn ->
         case MempoolHttpClient.get_raw_tx(txid) do
@@ -52,13 +70,10 @@ defmodule BtcTxFeedWeb.TxLookupLive do
         end
       end)
 
-    socket =
-      socket
-      |> assign(:searched_txid, txid)
-      |> assign(:tx_details, :loading)
-      |> assign(:task_ref, task.ref)
-
-    {:noreply, socket}
+    socket
+    |> assign(:searched_txid, txid)
+    |> assign(:tx_details, :loading)
+    |> assign(:task_ref, task.ref)
   end
 
   @impl true
@@ -68,7 +83,7 @@ defmodule BtcTxFeedWeb.TxLookupLive do
       <div class="max-w-4xl mx-auto">
         <div class="mb-2">
           <p class="text text-base-content">
-            Paste a Bitcoin txid to fetch and decode the raw transaction.
+            Paste a txid to fetch and decode the raw transaction.
           </p>
         </div>
 
@@ -78,7 +93,8 @@ defmodule BtcTxFeedWeb.TxLookupLive do
               <.input
                 field={@form[:txid]}
                 type="text"
-                class="w-full input h-12"
+                class="w-full input h-12 focus:outline-none"
+                spellcheck="false"
               />
             </div>
             <button
