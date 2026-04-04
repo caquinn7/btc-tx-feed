@@ -74,8 +74,14 @@ defmodule BtcTxFeedWeb.MempoolLive do
     task =
       Task.async(fn ->
         case MempoolHttpClient.get_raw_tx(txid) do
-          {:ok, raw} -> TxParser.parse(raw)
-          {:error, reason} -> {:error, reason}
+          {:ok, raw} ->
+            case TxParser.parse(raw) do
+              {:ok, details} -> {:ok, details, Base.encode16(raw, case: :lower)}
+              err -> err
+            end
+
+          {:error, reason} ->
+            {:error, reason}
         end
       end)
 
@@ -222,7 +228,7 @@ defmodule BtcTxFeedWeb.MempoolLive do
                     </p>
                   </div>
                 <% true -> %>
-                  <.tx_details_card details={elem(@tx_details, 1)} />
+                  <.tx_details_card details={elem(@tx_details, 1)} raw_hex={elem(@tx_details, 2)} />
               <% end %>
             </div>
           </div>

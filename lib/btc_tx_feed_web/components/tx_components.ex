@@ -2,6 +2,7 @@ defmodule BtcTxFeedWeb.TxComponents do
   use BtcTxFeedWeb, :html
 
   attr :details, :map, required: true
+  attr :raw_hex, :string, default: nil
 
   def tx_details_card(assigns) do
     ~H"""
@@ -201,6 +202,18 @@ defmodule BtcTxFeedWeb.TxComponents do
           </div>
         <% end %>
       </div>
+
+      <%!-- Raw hex (expandable) --%>
+      <%= if @raw_hex do %>
+        <div class="px-6 pb-6">
+          <details class="mt-2">
+            <summary class="text-xs text-base-content/40 cursor-pointer hover:text-base-content/60 transition-colors select-none">
+              Raw hex
+            </summary>
+            <pre class="mt-2 p-3 rounded-lg bg-base-300 text-xs font-mono text-base-content/60 break-all overflow-x-auto whitespace-pre-wrap">{@raw_hex}</pre>
+          </details>
+        </div>
+      <% end %>
     </div>
     """
   end
