@@ -239,24 +239,38 @@ defmodule BtcTxFeed.TxRetentionRules do
   end
 
   defp do_match(details, {:gt, field, value}) do
-    Map.get(details, field) > value
+    case Map.get(details, field) do
+      nil -> false
+      v -> v > value
+    end
   end
 
   defp do_match(details, {:gte, field, value}) do
-    Map.get(details, field) >= value
+    case Map.get(details, field) do
+      nil -> false
+      v -> v >= value
+    end
   end
 
   defp do_match(details, {:lt, field, value}) do
-    Map.get(details, field) < value
+    case Map.get(details, field) do
+      nil -> false
+      v -> v < value
+    end
   end
 
   defp do_match(details, {:lte, field, value}) do
-    Map.get(details, field) <= value
+    case Map.get(details, field) do
+      nil -> false
+      v -> v <= value
+    end
   end
 
   defp do_match(details, {:between, field, min, max}) do
-    v = Map.get(details, field)
-    v >= min and v <= max
+    case Map.get(details, field) do
+      nil -> false
+      v -> v >= min and v <= max
+    end
   end
 
   defp do_match(details, {:in, field, values}) do

@@ -358,6 +358,33 @@ defmodule BtcTxFeed.TxRetentionRulesTest do
     end
   end
 
+  describe "match?/2 — numeric operators with absent fields" do
+    # When validated: false, size fields (base_size, total_size, weight, vsize)
+    # are not present in the details map. All numeric operators must return false
+    # rather than silently producing wrong results from nil comparisons.
+    @unvalidated_details Map.drop(@legacy_details, [:base_size, :total_size, :weight, :vsize])
+
+    test ":gt returns false when field is absent" do
+      refute TxRetentionRules.match?(@unvalidated_details, {:gt, :base_size, 0})
+    end
+
+    test ":gte returns false when field is absent" do
+      refute TxRetentionRules.match?(@unvalidated_details, {:gte, :base_size, 0})
+    end
+
+    test ":lt returns false when field is absent" do
+      refute TxRetentionRules.match?(@unvalidated_details, {:lt, :base_size, 9_999_999})
+    end
+
+    test ":lte returns false when field is absent" do
+      refute TxRetentionRules.match?(@unvalidated_details, {:lte, :base_size, 9_999_999})
+    end
+
+    test ":between returns false when field is absent" do
+      refute TxRetentionRules.match?(@unvalidated_details, {:between, :vsize, 0, 9_999_999})
+    end
+  end
+
   describe "match?/2 — :in" do
     test "matches when value is in the list" do
       assert TxRetentionRules.match?(@legacy_details, {:in, :version, [1, 2]})
