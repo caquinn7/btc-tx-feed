@@ -60,6 +60,11 @@ rules_path = System.get_env("RETENTION_RULES_PATH") || default_rules_path
 
 if File.exists?(rules_path) do
   {rules, _bindings} = Code.eval_file(rules_path)
+
+  if not is_list(rules) do
+    raise "#{rules_path} must evaluate to a list, got: #{inspect(rules)}"
+  end
+
   config :btc_tx_feed, :retention_rules, rules
 end
 
