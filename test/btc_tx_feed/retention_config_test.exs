@@ -8,7 +8,7 @@ defmodule BtcTxFeed.RetentionConfigTest do
     is_segwit: true,
     input_count: 1,
     output_count: 2,
-    output_script_type_counts: %{p2wpkh: 1, null_data: 1},
+    output_script_type_counts: %{p2_w_p_k_h: 1, null_data: 1},
     witness_item_counts_per_input: [2],
     witness_total_items: 2,
     witness_total_bytes: 100,
