@@ -45,6 +45,24 @@ config :btc_tx_feed, :decode_policy,
   max_witness_items_per_input: witness_items_limit,
   max_witness_size_per_input: witness_size_limit
 
+# Retention rules — loaded from a file on the persistent volume.
+# The file must evaluate to a list of rule tuples understood by
+# BtcTxFeed.TxRetentionRules. If the file does not exist, the empty default
+# from config.exs applies and no transactions are retained.
+default_rules_path =
+  if config_env() == :prod do
+    "/data/retention_rules.exs"
+  else
+    Path.expand("../data/retention_rules.exs", __DIR__)
+  end
+
+rules_path = System.get_env("RETENTION_RULES_PATH") || default_rules_path
+
+if File.exists?(rules_path) do
+  {rules, _bindings} = Code.eval_file(rules_path)
+  config :btc_tx_feed, :retention_rules, rules
+end
+
 if config_env() == :prod do
   config :btc_tx_feed, BtcTxFeed.Repo,
     database: System.get_env("DATABASE_PATH", "/data/btc_tx_feed.db")

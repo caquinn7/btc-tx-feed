@@ -10,6 +10,7 @@ defmodule BtcTxFeed.Application do
   def start(_type, _args) do
     setup_signal_handlers()
     maybe_migrate()
+    validate_retention_rules!()
 
     children =
       [
@@ -64,5 +65,19 @@ defmodule BtcTxFeed.Application do
     else
       []
     end
+  end
+
+  defp validate_retention_rules! do
+    rules = Application.get_env(:btc_tx_feed, :retention_rules, [])
+
+    Enum.each(rules, fn rule ->
+      case BtcTxFeed.TxRetentionRules.validate_rule(rule) do
+        :ok ->
+          :ok
+
+        {:error, reason} ->
+          raise "Invalid retention rule in config: #{reason}\n  Rule: #{inspect(rule)}"
+      end
+    end)
   end
 end

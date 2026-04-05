@@ -33,6 +33,8 @@ btc_tx_feed-*.tar
 *.db-shm
 *.db-wal
 
+data/retention_rules.exs
+
 # TxStats snapshot files
 /tx_stats_snapshot.bin
 /tx_stats_snapshot.bin.tmp
