@@ -165,6 +165,34 @@ defmodule BtcTxFeed.TxRetentionRulesTest do
     test "rejects malformed scalar (missing value arg)" do
       assert {:error, _} = TxRetentionRules.validate_rule({:eq, :is_segwit})
     end
+
+    test "rejects non-numeric value for :gt" do
+      assert {:error, _} = TxRetentionRules.validate_rule({:gt, :input_count, "big"})
+    end
+
+    test "rejects non-numeric value for :gte" do
+      assert {:error, _} = TxRetentionRules.validate_rule({:gte, :vsize, nil})
+    end
+
+    test "rejects non-numeric value for :lt" do
+      assert {:error, _} = TxRetentionRules.validate_rule({:lt, :weight, :large})
+    end
+
+    test "rejects non-numeric value for :lte" do
+      assert {:error, _} = TxRetentionRules.validate_rule({:lte, :output_count, "5"})
+    end
+
+    test "rejects non-numeric min in :between" do
+      assert {:error, _} = TxRetentionRules.validate_rule({:between, :base_size, "small", 500})
+    end
+
+    test "rejects non-numeric max in :between" do
+      assert {:error, _} = TxRetentionRules.validate_rule({:between, :base_size, 100, :big})
+    end
+
+    test "rejects inverted :between range (min > max)" do
+      assert {:error, _} = TxRetentionRules.validate_rule({:between, :base_size, 500, 100})
+    end
   end
 
   describe "validate_rule/1 — domain-specific predicates" do

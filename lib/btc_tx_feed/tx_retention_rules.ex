@@ -128,13 +128,31 @@ defmodule BtcTxFeed.TxRetentionRules do
     do_validate(child)
   end
 
+  defp do_validate({op, field, value})
+       when op in [:gt, :gte, :lt, :lte] do
+    if is_number(value) do
+      validate_field(field)
+    else
+      {:error, "#{op} requires a numeric value, got: #{inspect(value)}"}
+    end
+  end
+
   defp do_validate({op, field, _value})
-       when op in [:eq, :neq, :gt, :gte, :lt, :lte] do
+       when op in [:eq, :neq] do
     validate_field(field)
   end
 
-  defp do_validate({:between, field, _min, _max}) do
-    validate_field(field)
+  defp do_validate({:between, field, min, max}) when is_number(min) and is_number(max) do
+    if min <= max do
+      validate_field(field)
+    else
+      {:error, ":between min (#{min}) must be <= max (#{max})"}
+    end
+  end
+
+  defp do_validate({:between, _field, min, max}) do
+    bad = if not is_number(min), do: min, else: max
+    {:error, ":between requires numeric min and max, got: #{inspect(bad)}"}
   end
 
   defp do_validate({:in, field, values}) when is_list(values) do
