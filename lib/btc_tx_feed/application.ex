@@ -70,6 +70,10 @@ defmodule BtcTxFeed.Application do
   defp validate_retention_rules! do
     rules = Application.get_env(:btc_tx_feed, :retention_rules, [])
 
+    if not is_list(rules) do
+      raise "Invalid :retention_rules config: expected a list, got: #{inspect(rules)}"
+    end
+
     Enum.each(rules, fn rule ->
       case BtcTxFeed.TxRetentionRules.validate_rule(rule) do
         :ok ->
