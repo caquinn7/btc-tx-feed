@@ -77,10 +77,23 @@ defmodule BtcTxFeed.TxRetentionRules do
 
   @doc """
   Returns `true` if `details` (a map produced by `TxParser.parse/1`) matches
-  `rule`. Raises `ArgumentError` if `rule` is structurally invalid.
+  `rule`. Does not validate `rule` — callers are responsible for ensuring the
+  rule is structurally valid. Use `match!/2` if you want validation with a
+  raised `ArgumentError` on invalid rules.
   """
   def match?(details, rule) do
     do_match(details, rule)
+  end
+
+  @doc """
+  Same as `match?/2` but validates `rule` first and raises `ArgumentError` if
+  the rule is structurally invalid.
+  """
+  def match!(details, rule) do
+    case validate_rule(rule) do
+      :ok -> do_match(details, rule)
+      {:error, reason} -> raise ArgumentError, reason
+    end
   end
 
   # ---------------------------------------------------------------------------
