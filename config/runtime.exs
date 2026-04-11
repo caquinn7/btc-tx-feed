@@ -61,8 +61,6 @@ rules_path = System.get_env("RETENTION_RULES_PATH") || default_rules_path
 if File.exists?(rules_path) do
   {entries, _bindings} = Code.eval_file(rules_path)
 
-  IO.inspect(entries)
-
   if not is_list(entries) do
     raise "#{rules_path} must evaluate to a list, got: #{inspect(entries)}"
   end
@@ -79,10 +77,19 @@ if File.exists?(rules_path) do
   config :btc_tx_feed, :retention_rules, entries
 end
 
-if config_env() == :prod do
-  config :btc_tx_feed, BtcTxFeed.Repo,
-    database: System.get_env("DATABASE_PATH", "/data/btc_tx_feed.db")
+if config_env() != :test do
+  default_database_path =
+    if config_env() == :prod do
+      "/data/btc_tx_feed.db"
+    else
+      Path.expand("../data/btc_tx_feed.db", __DIR__)
+    end
 
+  database_path = System.get_env("DATABASE_PATH") || default_database_path
+  config :btc_tx_feed, BtcTxFeed.Repo, database: database_path
+end
+
+if config_env() == :prod do
   # The secret key base is used to sign/encrypt cookies and other secrets.
   # A default value is used in config/dev.exs and config/test.exs but you
   # want to use a different value for prod and you most likely don't want

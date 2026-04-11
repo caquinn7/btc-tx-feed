@@ -28,7 +28,7 @@ config :phoenix,
   sort_verified_routes_query_params: true
 
 config :btc_tx_feed, BtcTxFeed.Repo,
-  database: Path.expand("../btc_tx_feed_test.db", __DIR__),
+  database: Path.expand("../_build/test/btc_tx_feed_test.db", __DIR__),
   pool: Ecto.Adapters.SQL.Sandbox
 
 config :btc_tx_feed, :start_analytics, false
