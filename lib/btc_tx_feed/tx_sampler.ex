@@ -9,7 +9,14 @@ defmodule BtcTxFeed.TxSampler do
 
   require Logger
 
-  alias BtcTxFeed.{FailureStore, MempoolHttpClient, TxParser, TxStats}
+  alias BtcTxFeed.{
+    FailureStore,
+    MempoolHttpClient,
+    RetentionConfig,
+    RetainedTxStore,
+    TxParser,
+    TxStats
+  }
 
   @queue_cap 500
   @tick_ms 1_000
@@ -88,6 +95,12 @@ defmodule BtcTxFeed.TxSampler do
           case TxParser.parse(raw) do
             {:ok, details} ->
               TxStats.record(details)
+
+              if details.validated do
+                details
+                |> RetentionConfig.matching_entries()
+                |> Enum.each(fn entry -> RetainedTxStore.insert(txid, raw, entry) end)
+              end
 
               if not details.validated do
                 FailureStore.insert_consensus_failure(
