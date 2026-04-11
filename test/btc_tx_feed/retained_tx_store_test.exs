@@ -15,23 +15,23 @@ defmodule BtcTxFeed.RetainedTxStoreTest do
     }
   end
 
-  describe "insert/3" do
+  describe "insert!/3" do
     test "inserts a row and returns :ok when under the limit" do
-      assert :ok = RetainedTxStore.insert(@txid, @raw_bytes, entry())
+      assert :ok = RetainedTxStore.insert!(@txid, @raw_bytes, entry())
       assert Repo.aggregate(RetainedTransaction, :count) == 1
     end
 
     test "does not insert when the code is at its limit" do
       e = entry(limit: 2)
-      RetainedTxStore.insert(@txid, @raw_bytes, e)
-      RetainedTxStore.insert(@txid <> "a", @raw_bytes, e)
+      RetainedTxStore.insert!(@txid, @raw_bytes, e)
+      RetainedTxStore.insert!(@txid <> "a", @raw_bytes, e)
 
-      assert :ok = RetainedTxStore.insert(@txid <> "b", @raw_bytes, e)
+      assert :ok = RetainedTxStore.insert!(@txid <> "b", @raw_bytes, e)
       assert Repo.aggregate(RetainedTransaction, :count) == 2
     end
 
     test "stores corpus_code and corpus_label from the entry" do
-      RetainedTxStore.insert(@txid, @raw_bytes, entry(code: "X99", label: "My label"))
+      RetainedTxStore.insert!(@txid, @raw_bytes, entry(code: "X99", label: "My label"))
 
       [row] = Repo.all(RetainedTransaction)
       assert row.corpus_code == "X99"
@@ -39,7 +39,7 @@ defmodule BtcTxFeed.RetainedTxStoreTest do
     end
 
     test "stores raw bytes as lowercase hex" do
-      RetainedTxStore.insert(@txid, <<0xCA, 0xFE>>, entry())
+      RetainedTxStore.insert!(@txid, <<0xCA, 0xFE>>, entry())
 
       [row] = Repo.all(RetainedTransaction)
       assert row.raw_hex == "cafe"
@@ -47,22 +47,22 @@ defmodule BtcTxFeed.RetainedTxStoreTest do
 
     test "stores matched_rule as inspect of the entry rule" do
       rule = {:has_output_script_type, :null_data}
-      RetainedTxStore.insert(@txid, @raw_bytes, entry(rule: rule))
+      RetainedTxStore.insert!(@txid, @raw_bytes, entry(rule: rule))
 
       [row] = Repo.all(RetainedTransaction)
       assert row.matched_rule == inspect(rule)
     end
 
     test "cap is per corpus_code, not global" do
-      RetainedTxStore.insert(@txid, @raw_bytes, entry(code: "A01", limit: 1))
-      RetainedTxStore.insert(@txid, @raw_bytes, entry(code: "B01", limit: 1))
+      RetainedTxStore.insert!(@txid, @raw_bytes, entry(code: "A01", limit: 1))
+      RetainedTxStore.insert!(@txid, @raw_bytes, entry(code: "B01", limit: 1))
 
       assert Repo.aggregate(RetainedTransaction, :count) == 2
     end
 
     test "second code is blocked independently when its limit is reached" do
-      RetainedTxStore.insert(@txid, @raw_bytes, entry(code: "A01", limit: 1))
-      RetainedTxStore.insert(@txid, @raw_bytes, entry(code: "A01", limit: 1))
+      RetainedTxStore.insert!(@txid, @raw_bytes, entry(code: "A01", limit: 1))
+      RetainedTxStore.insert!(@txid, @raw_bytes, entry(code: "A01", limit: 1))
 
       assert Repo.aggregate(RetainedTransaction, :count) == 1
     end

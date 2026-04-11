@@ -40,10 +40,10 @@ defmodule BtcTxFeedWeb.DecodeFailuresLiveTest do
     end
 
     test "only shows failures from the given session", %{conn: conn, session: session} do
-      FailureStore.insert_decode_failure("tx-in-session", <<1>>, :err, session.id)
+      FailureStore.insert_decode_failure!("tx-in-session", <<1>>, :err, session.id)
 
       other = StatsSessions.create_open!(DateTime.utc_now(), %{})
-      FailureStore.insert_decode_failure("tx-other", <<2>>, :err, other.id)
+      FailureStore.insert_decode_failure!("tx-other", <<2>>, :err, other.id)
 
       {:ok, view, _html} = live(conn, ~p"/analytics/failures/decode?session_id=#{session.id}")
 

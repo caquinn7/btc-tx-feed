@@ -91,40 +91,47 @@ defmodule BtcTxFeed.TxSampler do
   defp process(txid, sampler_pid) do
     case MempoolHttpClient.get_raw_tx(txid) do
       {:ok, raw} ->
-        try do
-          case TxParser.parse(raw) do
-            {:ok, details} ->
-              TxStats.record(details)
+        parse_result =
+          try do
+            TxParser.parse(raw)
+          rescue
+            e -> {:error, Exception.message(e)}
+          end
 
-              if details.validated do
+        case parse_result do
+          {:ok, details} ->
+            TxStats.record(details)
+
+            if details.validated do
+              try do
                 details
                 |> RetentionConfig.matching_entries()
-                |> Enum.each(fn entry -> RetainedTxStore.insert(txid, raw, entry) end)
+                |> Enum.each(fn entry -> RetainedTxStore.insert!(txid, raw, entry) end)
+              rescue
+                e ->
+                  Logger.error(
+                    "TxSampler: retention insert failed for #{txid}: #{Exception.message(e)}"
+                  )
               end
-
-              if not details.validated do
-                FailureStore.insert_consensus_failure(
+            else
+              try do
+                FailureStore.insert_consensus_failure!(
                   txid,
                   raw,
                   details.validation_errors,
                   TxStats.get_session_id()
                 )
+              rescue
+                e ->
+                  Logger.error(
+                    "TxSampler: consensus failure insert failed for #{txid}: #{Exception.message(e)}"
+                  )
               end
+            end
 
-            {:error, reason} ->
-              TxStats.record_failure()
-              FailureStore.insert_decode_failure(txid, raw, reason, TxStats.get_session_id())
-          end
-        rescue
-          e ->
+          {:error, reason} ->
             TxStats.record_failure()
-
-            FailureStore.insert_decode_failure(
-              txid,
-              raw,
-              Exception.message(e),
-              TxStats.get_session_id()
-            )
+            FailureStore.insert_decode_failure!(txid, raw, reason, TxStats.get_session_id())
         end
 
       {:error, {:http_error, 429}} ->

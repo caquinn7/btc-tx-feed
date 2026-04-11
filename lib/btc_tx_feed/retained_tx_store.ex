@@ -7,7 +7,7 @@ defmodule BtcTxFeed.RetainedTxStore do
   Inserts a retained transaction row for the given corpus entry if the
   per-code limit has not yet been reached. Returns `:ok` in both cases.
   """
-  def insert(txid, raw_bytes, entry) do
+  def insert!(txid, raw_bytes, entry) do
     count =
       Repo.aggregate(
         from(r in RetainedTransaction, where: r.corpus_code == ^entry.code),

@@ -40,10 +40,10 @@ defmodule BtcTxFeedWeb.ConsensusViolationsLiveTest do
     end
 
     test "only shows violations from the given session", %{conn: conn, session: session} do
-      FailureStore.insert_consensus_failure("tx-in-session", <<1>>, :err, session.id)
+      FailureStore.insert_consensus_failure!("tx-in-session", <<1>>, :err, session.id)
 
       other = StatsSessions.create_open!(DateTime.utc_now(), %{})
-      FailureStore.insert_consensus_failure("tx-other", <<2>>, :err, other.id)
+      FailureStore.insert_consensus_failure!("tx-other", <<2>>, :err, other.id)
 
       {:ok, view, _html} = live(conn, ~p"/analytics/failures/consensus?session_id=#{session.id}")
 
