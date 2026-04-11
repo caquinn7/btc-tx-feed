@@ -331,3 +331,34 @@ defmodule BtcTxFeed.TxRetentionRules do
     Map.get(details, :largest_witness_item_bytes, 0) >= n
   end
 end
+
+# Possible future additions
+# 1. Exact count helpers for inputs with witness
+
+# You already have inputs_with_witness_count as a scalar field.
+# That is useful, but field-to-field comparison would unlock nicer rules like:
+
+# every input has witness
+# some but not all inputs have witness
+
+# Right now those are awkward to express.
+
+# 2. Output-count exactness / mixedness helpers
+
+# You already support script-type presence and count thresholds.
+# That is good, but eventually you may want helpers like:
+
+# at least n distinct output script types
+# exactly one OP_RETURN
+# exactly k outputs of a given type
+
+# You can do some of that already, but not all of it elegantly.
+
+# 3. Better “oddball” composability
+
+# As you get farther into O-codes, I suspect you’ll want reusable predicates around:
+
+# unknown/unclassified script presence
+# mixed legacy + witness-like outputs
+# unusually large scriptPubKey
+# empty witness on some segwit inputs vs others
