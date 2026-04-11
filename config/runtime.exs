@@ -59,13 +59,24 @@ default_rules_path =
 rules_path = System.get_env("RETENTION_RULES_PATH") || default_rules_path
 
 if File.exists?(rules_path) do
-  {rules, _bindings} = Code.eval_file(rules_path)
+  {entries, _bindings} = Code.eval_file(rules_path)
 
-  if not is_list(rules) do
-    raise "#{rules_path} must evaluate to a list, got: #{inspect(rules)}"
+  IO.inspect(entries)
+
+  if not is_list(entries) do
+    raise "#{rules_path} must evaluate to a list, got: #{inspect(entries)}"
   end
 
-  config :btc_tx_feed, :retention_rules, rules
+  Enum.each(entries, fn entry ->
+    required = [:code, :label, :limit, :rule]
+    missing = Enum.reject(required, &Map.has_key?(entry, &1))
+
+    if missing != [] do
+      raise "retention_rules entry is missing keys #{inspect(missing)}: #{inspect(entry)}"
+    end
+  end)
+
+  config :btc_tx_feed, :retention_rules, entries
 end
 
 if config_env() == :prod do
