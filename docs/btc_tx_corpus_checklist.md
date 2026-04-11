@@ -93,14 +93,14 @@ Goal: **maximize structural coverage observable from raw transaction bytes**
 
 Focus on these first:
 
-- [x] C01 Legacy simple  
-- [x] C04 SegWit simple  
-- [x] C06 Single witness item  
-- [x] C07 Coinbase  
+- [ ] C01 Legacy simple  
+- [ ] C04 SegWit simple  
+- [ ] C06 Single witness item input present.  
+- [ ] C07 Coinbase  
 - [ ] F01 OP_RETURN  
 - [ ] C02 Multi-input  
 - [ ] C03 Multi-output  
-- [ ] C05 SegWit multi-input  
+- [ ] C05 SegWit multi-input with multiple witnessed inputs  
 - [ ] S01 High input count  
 - [ ] S02 High output count  
 - [ ] S06 Witness-heavy  
