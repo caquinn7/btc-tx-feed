@@ -82,10 +82,9 @@ Goal: **maximize structural coverage observable from raw transaction bytes**
 
 # Oddball / Regression / Novelty
 
-- [ ] **O01 — Weird real-world transaction**  
+- [ ] **O01 — Structurally unusual transaction**  
 - [ ] **O02 — Unknown / unclassified script pattern**  
 - [ ] **O03 — Bug-triggering transaction (regression)**  
-- [ ] **O04 — Structurally surprising but valid transaction**  
 
 ---
 
