@@ -26,10 +26,11 @@ defmodule BtcTxFeed.TxRetentionRules do
 
   ## Domain-specific predicates
 
-      {:has_output_script_type,        type}
-      {:output_script_type_count_gte,  type, n}
-      {:has_any_output_script_type,    [type, ...]}
-      {:any_input_witness_items_eq,    n}
+      {:has_output_script_type,           type}
+      {:output_script_type_count_gte,     type, n}
+      {:has_any_output_script_type,        [type, ...]}
+      {:distinct_output_script_types_gte,  n}
+      {:any_input_witness_items_eq,         n}
       {:any_input_witness_items_gte,   n}
       {:witness_total_items_gte,       n}
       {:witness_total_bytes_gte,       n}
@@ -179,6 +180,10 @@ defmodule BtcTxFeed.TxRetentionRules do
     {:error, ":has_any_output_script_type requires a non-empty list of types"}
   end
 
+  defp do_validate({:distinct_output_script_types_gte, n}) when is_integer(n) do
+    :ok
+  end
+
   defp do_validate({:any_input_witness_items_eq, n}) when is_integer(n) do
     :ok
   end
@@ -307,6 +312,10 @@ defmodule BtcTxFeed.TxRetentionRules do
   defp do_match(details, {:has_any_output_script_type, types}) do
     counts = Map.get(details, :output_script_type_counts, %{})
     Enum.any?(types, &Map.has_key?(counts, &1))
+  end
+
+  defp do_match(details, {:distinct_output_script_types_gte, n}) do
+    map_size(Map.get(details, :output_script_type_counts, %{})) >= n
   end
 
   defp do_match(details, {:any_input_witness_items_eq, n}) do

@@ -232,6 +232,10 @@ defmodule BtcTxFeed.TxRetentionRulesTest do
       assert :ok = TxRetentionRules.validate_rule({:largest_witness_item_bytes_gte, 100})
     end
 
+    test "accepts {:distinct_output_script_types_gte, n}" do
+      assert :ok = TxRetentionRules.validate_rule({:distinct_output_script_types_gte, 2})
+    end
+
     test "rejects domain predicate with wrong arity" do
       assert {:error, _} = TxRetentionRules.validate_rule({:has_output_script_type})
     end
@@ -532,6 +536,28 @@ defmodule BtcTxFeed.TxRetentionRulesTest do
 
     test "does not match when largest item is below threshold" do
       refute TxRetentionRules.match?(@segwit_details, {:largest_witness_item_bytes_gte, 73})
+    end
+  end
+
+  describe "match?/2 — :distinct_output_script_types_gte" do
+    test "matches when distinct type count meets threshold" do
+      assert TxRetentionRules.match?(@op_return_details, {:distinct_output_script_types_gte, 2})
+      assert TxRetentionRules.match?(@op_return_details, {:distinct_output_script_types_gte, 1})
+    end
+
+    test "does not match when distinct type count is below threshold" do
+      refute TxRetentionRules.match?(@op_return_details, {:distinct_output_script_types_gte, 3})
+    end
+
+    test "counts only distinct types, not total outputs" do
+      # @legacy_details has 2 p2_p_k_h outputs — still only 1 distinct type
+      refute TxRetentionRules.match?(@legacy_details, {:distinct_output_script_types_gte, 2})
+      assert TxRetentionRules.match?(@legacy_details, {:distinct_output_script_types_gte, 1})
+    end
+
+    test "matches threshold equal to the exact distinct count" do
+      # @segwit_details has 1 distinct type (p2_w_p_k_h)
+      assert TxRetentionRules.match?(@segwit_details, {:distinct_output_script_types_gte, 1})
     end
   end
 end
