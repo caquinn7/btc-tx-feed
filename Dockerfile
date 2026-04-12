@@ -5,28 +5,28 @@ WORKDIR /app
 
 # Install system build tools; exqlite NIF requires gcc + cmake
 RUN apt-get update -y && \
-    apt-get install -y --no-install-recommends build-essential cmake git curl && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+  apt-get install -y --no-install-recommends build-essential cmake git curl && \
+  apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install Gleam v1.14.0 static Linux binary — arch is injected by BuildKit
 ARG TARGETARCH
 RUN if [ "$TARGETARCH" = "arm64" ]; then \
-      GLEAM_ARCH="aarch64-unknown-linux-musl"; \
-      GLEAM_SHA256="16371f8e3b45303d240758fe07f4adcb0fe444edf2f82312a24451323869730c"; \
-    else \
-      GLEAM_ARCH="x86_64-unknown-linux-musl"; \
-      GLEAM_SHA256="5dc66abbf3eb80f209f1c261ecfc44dc1404dd8ac503e483369d37182a4fcce8"; \
-    fi && \
-    curl -fsSL "https://github.com/gleam-lang/gleam/releases/download/v1.14.0/gleam-v1.14.0-${GLEAM_ARCH}.tar.gz" \
-      -o /tmp/gleam.tar.gz && \
-    echo "${GLEAM_SHA256} */tmp/gleam.tar.gz" | sha256sum --check && \
-    tar -xz -C /usr/local/bin -f /tmp/gleam.tar.gz && \
-    rm /tmp/gleam.tar.gz
+  GLEAM_ARCH="aarch64-unknown-linux-musl"; \
+  GLEAM_SHA256="16371f8e3b45303d240758fe07f4adcb0fe444edf2f82312a24451323869730c"; \
+  else \
+  GLEAM_ARCH="x86_64-unknown-linux-musl"; \
+  GLEAM_SHA256="5dc66abbf3eb80f209f1c261ecfc44dc1404dd8ac503e483369d37182a4fcce8"; \
+  fi && \
+  curl -fsSL "https://github.com/gleam-lang/gleam/releases/download/v1.14.0/gleam-v1.14.0-${GLEAM_ARCH}.tar.gz" \
+  -o /tmp/gleam.tar.gz && \
+  echo "${GLEAM_SHA256} */tmp/gleam.tar.gz" | sha256sum --check && \
+  tar -xz -C /usr/local/bin -f /tmp/gleam.tar.gz && \
+  rm /tmp/gleam.tar.gz
 
 # Install mix_gleam archive, hex, and rebar
 RUN mix archive.install hex mix_gleam "~> 0.6.2" --force && \
-    mix local.hex --force && \
-    mix local.rebar --force
+  mix local.hex --force && \
+  mix local.rebar --force
 
 ENV MIX_ENV=prod
 
@@ -64,8 +64,8 @@ WORKDIR /app
 
 # ERTS runtime dependencies + exqlite NIF runtime
 RUN apt-get update -y && \
-    apt-get install -y --no-install-recommends libstdc++6 openssl ca-certificates libncurses6 && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+  apt-get install -y --no-install-recommends libstdc++6 openssl ca-certificates libncurses6 sqlite3 && \
+  apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app/_build/prod/rel/btc_tx_feed ./
 
