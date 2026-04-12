@@ -77,8 +77,17 @@ defmodule BtcTxFeed.TxParser do
       output_script_type_counts: counts,
       has_op_return: Map.has_key?(counts, :null_data),
       op_return_output_count: Map.get(counts, :null_data, 0),
-      has_non_standard_output: Map.has_key?(counts, :non_standard)
+      has_non_standard_output: Map.has_key?(counts, :non_standard),
+      largest_script_pubkey_bytes: largest_script_pubkey_bytes(extracted_outputs)
     }
+  end
+
+  defp largest_script_pubkey_bytes([]), do: 0
+
+  defp largest_script_pubkey_bytes(outputs) do
+    outputs
+    |> Enum.map(& &1.script_pubkey_length)
+    |> Enum.max()
   end
 
   defp extract_witness_data(_tx, false), do: {[], empty_witness_summaries()}

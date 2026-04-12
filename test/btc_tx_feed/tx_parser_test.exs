@@ -344,6 +344,10 @@ defmodule BtcTxFeed.TxParserTest do
     test "has_non_standard_output is false", %{details: details} do
       refute details.has_non_standard_output
     end
+
+    test "largest_script_pubkey_bytes is 25 (P2PKH script length)", %{details: details} do
+      assert details.largest_script_pubkey_bytes == 25
+    end
   end
 
   describe "output script summaries for a tx with an OP_RETURN output" do
@@ -370,6 +374,12 @@ defmodule BtcTxFeed.TxParserTest do
 
     test "has_non_standard_output is false", %{details: details} do
       refute details.has_non_standard_output
+    end
+
+    test "largest_script_pubkey_bytes is 25 (P2PKH is larger than OP_RETURN script)", %{
+      details: details
+    } do
+      assert details.largest_script_pubkey_bytes == 25
     end
   end
 

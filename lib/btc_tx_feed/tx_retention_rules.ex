@@ -54,6 +54,7 @@ defmodule BtcTxFeed.TxRetentionRules do
                    :has_op_return,
                    :op_return_output_count,
                    :has_non_standard_output,
+                   :largest_script_pubkey_bytes,
                    # Witness summary fields
                    :witness_total_items,
                    :witness_total_bytes,

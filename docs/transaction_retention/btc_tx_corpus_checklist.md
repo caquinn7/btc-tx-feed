@@ -63,7 +63,7 @@ Goal: **maximize structural coverage observable from raw transaction bytes**
 - [r] **F03 — Witness v0 output present (OP_0 + data)**  
 - [r] **F04 — Witness v1 output present (OP_1 + data)**   
 - [r] **F05 — Mixed output script types**  
-- [ ] **F06 — Large scriptPubKey output**  
+- [r] **F06 — Large scriptPubKey output**  
 
 ---
 
