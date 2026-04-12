@@ -72,7 +72,7 @@ Goal: **maximize structural coverage observable from raw transaction bytes**
 - [r] **S01 — High input count**  
 - [r] **S02 — High output count**  
 - [r] **S03 — Large transaction size (total serialized size >= 2,000 bytes)**  
-- [ ] **S04 — Very small transaction (Total serialized size <= 150 bytes)**  
+- [r] **S04 — Very small transaction (Total serialized size <= 150 bytes)**  
 - [r] **S05 — Many inputs + many outputs**  
 - [r] **S06 — Witness-heavy transaction**  
 
