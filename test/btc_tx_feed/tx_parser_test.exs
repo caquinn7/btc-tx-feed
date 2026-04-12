@@ -21,6 +21,26 @@ defmodule BtcTxFeed.TxParserTest do
   # Decodes successfully but fails validate_consensus/1
   @negative_output_hex "0100000001000000000000000000000000000000000000000000000000000000000000000000000000000000000001ffffffffffffffff0000000000"
 
+  # Legacy tx with mixed outputs: 1 P2PKH + 1 OP_RETURN (null_data)
+  # 1 input spending prevout abcdef0123456789...89 vout=1, empty scriptSig
+  # output1: 1000 sats P2PKH; output2: 0 sats OP_RETURN (push 7 bytes)
+  @with_op_return_hex Enum.join([
+                        "01000000",
+                        "01",
+                        "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789",
+                        "01000000",
+                        "00",
+                        "ffffffff",
+                        "02",
+                        "e803000000000000",
+                        "19",
+                        "76a914010101010101010101010101010101010101010188ac",
+                        "0000000000000000",
+                        "09",
+                        "6a07deadbeef010203",
+                        "00000000"
+                      ])
+
   defp raw(hex), do: Base.decode16!(hex, case: :lower)
 
   # ---------------------------------------------------------------------------
@@ -291,6 +311,135 @@ defmodule BtcTxFeed.TxParserTest do
 
     test "validated flag is true", %{details: details} do
       assert details.validated == true
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # Output script summaries
+  # ---------------------------------------------------------------------------
+
+  describe "output script summaries for a legacy tx (all P2PKH)" do
+    setup do
+      {:ok, details} = TxParser.parse(raw(@legacy_v1_hex))
+      %{details: details}
+    end
+
+    test "output_script_types is a list of :p2_p_k_h atoms", %{details: details} do
+      assert length(details.output_script_types) == 33
+      assert Enum.all?(details.output_script_types, &(&1 == :p2_p_k_h))
+    end
+
+    test "output_script_type_counts has only :p2_p_k_h with count 33", %{details: details} do
+      assert details.output_script_type_counts == %{p2_p_k_h: 33}
+    end
+
+    test "has_op_return is false", %{details: details} do
+      refute details.has_op_return
+    end
+
+    test "op_return_output_count is 0", %{details: details} do
+      assert details.op_return_output_count == 0
+    end
+
+    test "has_non_standard_output is false", %{details: details} do
+      refute details.has_non_standard_output
+    end
+
+    test "largest_script_pubkey_bytes is 25 (P2PKH script length)", %{details: details} do
+      assert details.largest_script_pubkey_bytes == 25
+    end
+  end
+
+  describe "output script summaries for a tx with an OP_RETURN output" do
+    setup do
+      {:ok, details} = TxParser.parse(raw(@with_op_return_hex))
+      %{details: details}
+    end
+
+    test "output_script_types contains both script types in order", %{details: details} do
+      assert details.output_script_types == [:p2_p_k_h, :null_data]
+    end
+
+    test "output_script_type_counts reflects both types", %{details: details} do
+      assert details.output_script_type_counts == %{p2_p_k_h: 1, null_data: 1}
+    end
+
+    test "has_op_return is true", %{details: details} do
+      assert details.has_op_return
+    end
+
+    test "op_return_output_count is 1", %{details: details} do
+      assert details.op_return_output_count == 1
+    end
+
+    test "has_non_standard_output is false", %{details: details} do
+      refute details.has_non_standard_output
+    end
+
+    test "largest_script_pubkey_bytes is 25 (P2PKH is larger than OP_RETURN script)", %{
+      details: details
+    } do
+      assert details.largest_script_pubkey_bytes == 25
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # Witness summaries
+  # ---------------------------------------------------------------------------
+
+  describe "witness summaries for a legacy tx" do
+    setup do
+      {:ok, details} = TxParser.parse(raw(@legacy_v1_hex))
+      %{details: details}
+    end
+
+    test "witness_item_counts_per_input is an empty list", %{details: details} do
+      assert details.witness_item_counts_per_input == []
+    end
+
+    test "witness_total_items is 0", %{details: details} do
+      assert details.witness_total_items == 0
+    end
+
+    test "witness_total_bytes is 0", %{details: details} do
+      assert details.witness_total_bytes == 0
+    end
+
+    test "largest_witness_item_bytes is 0", %{details: details} do
+      assert details.largest_witness_item_bytes == 0
+    end
+
+    test "inputs_with_witness_count is 0", %{details: details} do
+      assert details.inputs_with_witness_count == 0
+    end
+  end
+
+  describe "witness summaries for a SegWit tx (2 inputs, each with 2 items)" do
+    # @segwit_v1_hex: 2 inputs; each witness stack has a DER sig (72 B) and a pubkey (33 B)
+    # total items: 4, total bytes: 210, largest: 72, inputs_with_witness: 2
+    setup do
+      {:ok, details} = TxParser.parse(raw(@segwit_v1_hex))
+      %{details: details}
+    end
+
+    test "witness_item_counts_per_input has one entry per input", %{details: details} do
+      assert details.witness_item_counts_per_input == [2, 2]
+    end
+
+    test "witness_total_items is 4", %{details: details} do
+      assert details.witness_total_items == 4
+    end
+
+    test "witness_total_bytes is 210", %{details: details} do
+      assert details.witness_total_bytes == 210
+    end
+
+    test "largest_witness_item_bytes is 72", %{details: details} do
+      assert details.largest_witness_item_bytes == 72
+    end
+
+    test "inputs_with_witness_count is 2", %{details: details} do
+      assert details.inputs_with_witness_count == 2
     end
   end
 end

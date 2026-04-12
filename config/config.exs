@@ -11,7 +11,7 @@ config :btc_tx_feed,
   generators: [timestamp_type: :utc_datetime],
   ecto_repos: [BtcTxFeed.Repo]
 
-config :btc_tx_feed, BtcTxFeed.Repo, database: Path.expand("../btc_tx_feed.db", __DIR__)
+config :btc_tx_feed, :retention_rules, []
 
 # Configure the endpoint
 config :btc_tx_feed, BtcTxFeedWeb.Endpoint,

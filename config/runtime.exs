@@ -45,10 +45,52 @@ config :btc_tx_feed, :decode_policy,
   max_witness_items_per_input: witness_items_limit,
   max_witness_size_per_input: witness_size_limit
 
-if config_env() == :prod do
-  config :btc_tx_feed, BtcTxFeed.Repo,
-    database: System.get_env("DATABASE_PATH", "/data/btc_tx_feed.db")
+# Retention rules — loaded from a file on the persistent volume.
+# The file must evaluate to a list of entry maps understood by
+# BtcTxFeed.TxRetentionRules, where each entry includes :code, :label,
+# :limit, and :rule. If the file does not exist, the empty default from
+# config.exs applies and no transactions are retained.
+default_rules_path =
+  if config_env() == :prod do
+    "/data/retention_rules.exs"
+  else
+    Path.expand("../data/retention_rules.exs", __DIR__)
+  end
 
+rules_path = System.get_env("RETENTION_RULES_PATH") || default_rules_path
+
+if File.exists?(rules_path) do
+  {entries, _bindings} = Code.eval_file(rules_path)
+
+  if not is_list(entries) do
+    raise "#{rules_path} must evaluate to a list, got: #{inspect(entries)}"
+  end
+
+  Enum.each(entries, fn entry ->
+    required = [:code, :label, :limit, :rule]
+    missing = Enum.reject(required, &Map.has_key?(entry, &1))
+
+    if missing != [] do
+      raise "retention_rules entry is missing keys #{inspect(missing)}: #{inspect(entry)}"
+    end
+  end)
+
+  config :btc_tx_feed, :retention_rules, entries
+end
+
+if config_env() != :test do
+  default_database_path =
+    if config_env() == :prod do
+      "/data/btc_tx_feed.db"
+    else
+      Path.expand("../data/btc_tx_feed.db", __DIR__)
+    end
+
+  database_path = System.get_env("DATABASE_PATH") || default_database_path
+  config :btc_tx_feed, BtcTxFeed.Repo, database: database_path
+end
+
+if config_env() == :prod do
   # The secret key base is used to sign/encrypt cookies and other secrets.
   # A default value is used in config/dev.exs and config/test.exs but you
   # want to use a different value for prod and you most likely don't want

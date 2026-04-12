@@ -3,11 +3,11 @@ defmodule BtcTxFeed.FailureStore do
 
   alias BtcTxFeed.{Failure, Repo}
 
-  def insert_decode_failure(txid, raw_bytes, reason, session_id) do
+  def insert_decode_failure!(txid, raw_bytes, reason, session_id) do
     do_insert(txid, raw_bytes, reason, session_id, "decode")
   end
 
-  def insert_consensus_failure(txid, raw_bytes, errors, session_id) do
+  def insert_consensus_failure!(txid, raw_bytes, errors, session_id) do
     do_insert(txid, raw_bytes, errors, session_id, "consensus")
   end
 
