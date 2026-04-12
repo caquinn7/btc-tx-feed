@@ -17,6 +17,7 @@ Goal: **maximize structural coverage observable from raw transaction bytes**
 ## Status Legend
 
 - [ ] TODO  
+- [r] RULE DEFINED
 - [x] HAVE  
 - [~] EXPAND (have at least one, want more)  
 
@@ -24,22 +25,22 @@ Goal: **maximize structural coverage observable from raw transaction bytes**
 
 # Core Structural Shapes (Parser-Visible)
 
-- [x] **C01 — Legacy simple**  
+- [r] **C01 — Legacy simple**  
   _No witness, ~1 input, 2 outputs_
 
-- [x] **C02 — Legacy multi-input**  
+- [r] **C02 — Legacy multi-input**  
   _Multiple inputs, no witness_
 
-- [x] **C03 — Legacy multi-output**  
+- [r] **C03 — Legacy multi-output**  
   _Multiple outputs, no witness_
 
-- [x] **C04 — SegWit simple (v0-like structure)**  
+- [r] **C04 — SegWit simple (v0-like structure)**  
   _Witness present, simple structure (e.g., 1 input, small witness stacks)_
 
-- [x] **C05 — Multi-input with multiple witnessed inputs**  
+- [r] **C05 — Multi-input with multiple witnessed inputs**  
   _Multiple inputs, with multiple inputs carrying witness data_
 
-- [x] **C06 — Single-witness-item input**  
+- [r] **C06 — Single-witness-item input**  
   _At least one input with exactly one witness item_
 
 - [ ] **C07 — Coinbase transaction (Manual / block-sourced; not expected from mempool feed)**  
@@ -49,31 +50,31 @@ Goal: **maximize structural coverage observable from raw transaction bytes**
 
 # Witness Structure Variants
 
-- [ ] **W01 — Multiple witness items (per input)**  
+- [r] **W01 — At least one input with multiple witness items**  
 - [ ] **W02 — Mixed witness patterns across inputs**  
-- [ ] **W03 — Large witness item**  
+- [r] **W03 — Large witness item (largest_witness_item_bytes >= 200)**  
 
 ---
 
 # Output Script Shapes (Parser-Visible)
 
-- [x] **F01 — OP_RETURN output present**  
-- [ ] **F02 — Multiple OP_RETURN outputs**  
-- [ ] **F03 — Witness v0 output present (OP_0 + data)**  
-- [ ] **F04 — Witness v1 output present (OP_1 + data)**  
-- [ ] **F05 — Mixed output script types**  
+- [r] **F01 — OP_RETURN output present**  
+- [r] **F02 — Multiple OP_RETURN outputs**  
+- [r] **F03 — Witness v0 output present (OP_0 + data)**  
+- [r] **F04 — Witness v1 output present (OP_1 + data)**   
+- [r] **F05 — Mixed output script types**  
 - [ ] **F06 — Large scriptPubKey output**  
 
 ---
 
 # Size / Complexity
 
-- [x] **S01 — High input count**  
-- [x] **S02 — High output count**  
-- [ ] **S03 — Large transaction size (total serialized size >= 2,000 bytes)**  
+- [r] **S01 — High input count**  
+- [r] **S02 — High output count**  
+- [r] **S03 — Large transaction size (total serialized size >= 2,000 bytes)**  
 - [ ] **S04 — Very small transaction (Total serialized size <= 150 bytes)**  
-- [ ] **S05 — Many inputs + many outputs**  
-- [x] **S06 — Witness-heavy transaction**  
+- [r] **S05 — Many inputs + many outputs**  
+- [r] **S06 — Witness-heavy transaction**  
 
 ---
 
@@ -81,17 +82,17 @@ Goal: **maximize structural coverage observable from raw transaction bytes**
 
 Focus on these first:
 
-- [x] C01 Legacy simple  
-- [x] C04 SegWit simple  
-- [x] C06 Single-witness-item input present  
+- [ ] C01 Legacy simple  
+- [ ] C04 SegWit simple  
+- [ ] C06 Single-witness-item input present  
 - [ ] C07 Coinbase  
-- [x] F01 OP_RETURN  
-- [x] C02 Multi-input  
-- [x] C03 Multi-output  
-- [x] C05 Multi-input with multiple witnessed inputs  
-- [x] S01 High input count  
-- [x] S02 High output count  
-- [x] S06 Witness-heavy  
+- [ ] F01 OP_RETURN  
+- [ ] C02 Multi-input  
+- [ ] C03 Multi-output  
+- [ ] C05 Multi-input with multiple witnessed inputs  
+- [ ] S01 High input count  
+- [ ] S02 High output count  
+- [ ] S06 Witness-heavy  
 
 ---
 
