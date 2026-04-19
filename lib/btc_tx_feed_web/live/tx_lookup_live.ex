@@ -26,7 +26,7 @@ defmodule BtcTxFeedWeb.TxLookupLive do
 
     socket =
       if socket.assigns.searched_txid == txid and
-           socket.assigns.tx_details not in [nil, :loading] do
+           match?({:ok, _, _}, socket.assigns.tx_details) do
         socket
         |> assign(:form, to_form(%{"txid" => txid}, as: :lookup))
         |> assign(:txid_dirty, false)
