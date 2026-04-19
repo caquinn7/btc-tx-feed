@@ -41,44 +41,43 @@ defmodule BtcTxFeedWeb.Layouts do
     ~H"""
     <header class="navbar px-4 sm:px-6 lg:px-8">
       <div class="flex-1 flex items-center gap-6">
-        <.link
-          navigate={~p"/"}
-          class={[
-            "flex w-fit items-center gap-2 transition-opacity",
-            if(@current_path == "/",
-              do: "font-semibold text-bitcoin",
-              else: "font-medium opacity-60 hover:opacity-100"
-            )
-          ]}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="size-8"
-          >
-            <path d="M16.247 7.761a6 6 0 0 1 0 8.478" /><path d="M19.075 4.933a10 10 0 0 1 0 14.134" /><path d="M4.925 19.067a10 10 0 0 1 0-14.134" /><path d="M7.753 16.239a6 6 0 0 1 0-8.478" /><circle
-              cx="12"
-              cy="12"
-              r="2"
-            />
-          </svg>
-          <span class="text-lg">Mempool Feed</span>
-        </.link>
         <nav class="flex items-center gap-6">
+          <.link
+            navigate={~p"/"}
+            class={[
+              "inline-flex shrink-0 cursor-pointer items-center gap-2 whitespace-nowrap rounded-md px-1 py-1 text-sm transition-colors",
+              if(@current_path == "/",
+                do: "font-semibold text-bitcoin",
+                else: "font-medium text-base-content/60 hover:text-bitcoin"
+              )
+            ]}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M16.247 7.761a6 6 0 0 1 0 8.478" /><path d="M19.075 4.933a10 10 0 0 1 0 14.134" /><path d="M4.925 19.067a10 10 0 0 1 0-14.134" /><path d="M7.753 16.239a6 6 0 0 1 0-8.478" /><circle
+                cx="12"
+                cy="12"
+                r="2"
+              />
+            </svg>
+            <span class="text-lg">Mempool Feed</span>
+          </.link>
           <.link
             navigate={~p"/tx"}
             class={[
-              "flex items-center gap-2 whitespace-nowrap text-sm transition-opacity",
+              "inline-flex shrink-0 cursor-pointer items-center gap-2 whitespace-nowrap rounded-md px-1 py-1 text-sm transition-colors",
               if(@current_path == "/tx",
                 do: "font-semibold text-bitcoin",
-                else: "font-medium opacity-60 hover:opacity-100"
+                else: "font-medium text-base-content/60 hover:text-bitcoin"
               )
             ]}
           >
@@ -100,10 +99,10 @@ defmodule BtcTxFeedWeb.Layouts do
           <.link
             navigate={~p"/analytics"}
             class={[
-              "flex items-center gap-2 whitespace-nowrap text-sm transition-opacity",
+              "inline-flex shrink-0 cursor-pointer items-center gap-2 whitespace-nowrap rounded-md px-1 py-1 text-sm transition-colors",
               if(String.starts_with?(@current_path || "", "/analytics"),
                 do: "font-semibold text-bitcoin",
-                else: "font-medium opacity-60 hover:opacity-100"
+                else: "font-medium text-base-content/60 hover:text-bitcoin"
               )
             ]}
           >
