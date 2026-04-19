@@ -15,6 +15,17 @@ defmodule BtcTxFeed.TxParser do
     end
   end
 
+  @doc """
+  Accepts a hex-encoded transaction string and returns `{:ok, details_map}` or
+  `{:error, reason}`.
+  """
+  def parse_hex(hex) when is_binary(hex) do
+    with {:ok, tx} <-
+           :btc_tx.decode_hex_with_policy(hex, BtcTxFeed.DecodePolicy.to_btc_tx_policy()) do
+      {:ok, build_details(tx)}
+    end
+  end
+
   # ---------------------------------------------------------------------------
   # Private helpers
   # ---------------------------------------------------------------------------
