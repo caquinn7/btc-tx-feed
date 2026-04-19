@@ -98,6 +98,10 @@ defmodule BtcTxFeedWeb.TxLookupLive do
 
   @impl true
   def handle_event("decode_hex", %{"hex_form" => %{"hex" => hex}}, socket) do
+    if socket.assigns.task_ref do
+      Process.demonitor(socket.assigns.task_ref, [:flush])
+    end
+
     hex =
       hex
       |> String.trim()
@@ -117,6 +121,7 @@ defmodule BtcTxFeedWeb.TxLookupLive do
 
     socket =
       socket
+      |> assign(:task_ref, nil)
       |> assign(:tx_details, result)
       |> assign(:searched_txid, txid)
       |> assign(:txid_dirty, false)
