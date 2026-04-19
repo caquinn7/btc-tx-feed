@@ -29,8 +29,6 @@ defmodule BtcTxFeed.TxStats do
       do: increment(:segwit_count),
       else: increment(:legacy_count)
 
-    if details.has_coinbase_marker, do: increment(:coinbase_count)
-
     if not details.validated, do: increment(:validation_failure_count)
 
     increment({:version, details.version})

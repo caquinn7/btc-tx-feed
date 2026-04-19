@@ -16,7 +16,6 @@ defmodule BtcTxFeed.TxStatsSessionTest do
       %{
         version: 2,
         is_segwit: false,
-        has_coinbase_marker: false,
         validated: true,
         vsize: 200,
         input_count: 1,

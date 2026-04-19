@@ -38,7 +38,7 @@ defmodule BtcTxFeedWeb.StatsComponents do
       </h2>
       <div class="space-y-2.5">
         <% tx_type_max = tx_type_max(@stats) %>
-        <%= for {label, key} <- [{"SegWit", :segwit_count}, {"Legacy", :legacy_count}, {"Coinbase", :coinbase_count}] do %>
+        <%= for {label, key} <- [{"SegWit", :segwit_count}, {"Legacy", :legacy_count}] do %>
           <% count = Map.get(@stats, key, 0) %>
           <div class="flex items-center gap-3">
             <span class="w-20 text-xs text-base-content/60 shrink-0">{label}</span>
@@ -230,7 +230,7 @@ defmodule BtcTxFeedWeb.StatsComponents do
   end
 
   defp tx_type_max(stats) do
-    [:segwit_count, :legacy_count, :coinbase_count]
+    [:segwit_count, :legacy_count]
     |> Enum.map(&Map.get(stats, &1, 0))
     |> Enum.max(fn -> 0 end)
   end
