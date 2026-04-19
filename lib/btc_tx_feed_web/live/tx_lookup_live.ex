@@ -152,7 +152,9 @@ defmodule BtcTxFeedWeb.TxLookupLive do
   def handle_event("validate_hex", %{"hex_form" => %{"hex" => hex}}, socket) do
     dirty =
       socket.assigns.decoded_hex != nil and
-        String.trim(hex) != socket.assigns.decoded_hex
+        hex
+        |> String.trim()
+        |> String.downcase() != socket.assigns.decoded_hex
 
     {:noreply, assign(socket, :hex_dirty, dirty)}
   end
