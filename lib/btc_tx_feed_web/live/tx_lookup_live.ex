@@ -12,6 +12,7 @@ defmodule BtcTxFeedWeb.TxLookupLive do
       |> assign(:tx_details, nil)
       |> assign(:searched_txid, nil)
       |> assign(:task_ref, nil)
+      |> assign(:hex_form, to_form(%{"hex" => ""}, as: :hex_form))
 
     {:ok, socket}
   end
@@ -21,9 +22,14 @@ defmodule BtcTxFeedWeb.TxLookupLive do
     txid = String.trim(txid)
 
     socket =
-      socket
-      |> assign(:form, to_form(%{"txid" => txid}, as: :lookup))
-      |> start_fetch(txid)
+      if socket.assigns.searched_txid == txid and
+           socket.assigns.tx_details not in [nil, :loading] do
+        assign(socket, :form, to_form(%{"txid" => txid}, as: :lookup))
+      else
+        socket
+        |> assign(:form, to_form(%{"txid" => txid}, as: :lookup))
+        |> start_fetch(txid)
+      end
 
     {:noreply, socket}
   end
@@ -47,10 +53,17 @@ defmodule BtcTxFeedWeb.TxLookupLive do
   def handle_info({ref, result}, socket) when ref == socket.assigns.task_ref do
     Process.demonitor(ref, [:flush])
 
+    hex =
+      case result do
+        {:ok, _details, raw_hex} -> raw_hex
+        _ -> ""
+      end
+
     socket =
       socket
       |> assign(:tx_details, result)
       |> assign(:task_ref, nil)
+      |> assign(:hex_form, to_form(%{"hex" => hex}, as: :hex_form))
 
     {:noreply, socket}
   end
@@ -69,6 +82,41 @@ defmodule BtcTxFeedWeb.TxLookupLive do
   def handle_event("lookup", %{"lookup" => %{"txid" => txid}}, socket) do
     txid = String.trim(txid)
     {:noreply, push_patch(socket, to: ~p"/tx/#{txid}")}
+  end
+
+  @impl true
+  def handle_event("decode_hex", %{"hex_form" => %{"hex" => hex}}, socket) do
+    hex =
+      hex
+      |> String.trim()
+      |> String.downcase()
+
+    result =
+      case TxParser.parse_hex(hex) do
+        {:ok, details} -> {:ok, details, hex}
+        err -> err
+      end
+
+    txid =
+      case result do
+        {:ok, details, _} -> details.txid
+        _ -> nil
+      end
+
+    socket =
+      socket
+      |> assign(:tx_details, result)
+      |> assign(:searched_txid, txid)
+      |> assign(:form, to_form(%{"txid" => txid || ""}, as: :lookup))
+
+    socket =
+      if txid do
+        push_patch(socket, to: ~p"/tx/#{txid}")
+      else
+        socket
+      end
+
+    {:noreply, socket}
   end
 
   defp start_fetch(socket, txid) do
@@ -101,27 +149,41 @@ defmodule BtcTxFeedWeb.TxLookupLive do
     ~H"""
     <Layouts.app flash={@flash} current_path={~p"/tx"}>
       <div class="max-w-4xl mx-auto">
-        <div class="mb-2">
-          <p class="text text-base-content">
-            Paste a txid to fetch and decode the raw transaction.
-          </p>
-        </div>
-
-        <.form for={@form} id="tx-lookup-form" phx-submit="lookup" class="mb-8">
+        <.form for={@form} id="tx-lookup-form" phx-submit="lookup" class="mb-3">
           <div class="flex gap-3 items-center">
-            <div class="flex-1 [&_.fieldset]:mb-0">
-              <.input
-                field={@form[:txid]}
-                type="text"
-                class="w-full input h-12 focus:outline-none"
-                spellcheck="false"
-              />
-            </div>
+            <input
+              id={@form[:txid].id}
+              name={@form[:txid].name}
+              type="text"
+              value={@form[:txid].value}
+              spellcheck="false"
+              placeholder="Paste a txid to fetch and decode the raw transaction…"
+              class="flex-1 h-12 rounded-xl border border-base-300 bg-base-200 px-4 font-mono text-xs text-base-content placeholder:text-base-content/30 focus:outline-none focus:border-base-content/20"
+            />
             <button
               type="submit"
-              class="h-12 px-5 rounded-xl bg-bitcoin text-white font-semibold hover:opacity-90 transition-opacity shrink-0 cursor-pointer"
+              class="w-36 h-12 rounded-xl bg-blue-500/15 text-blue-400 border border-blue-500/30 font-semibold hover:opacity-80 transition-opacity shrink-0 cursor-pointer"
             >
               Decode
+            </button>
+          </div>
+        </.form>
+
+        <.form for={@hex_form} id="hex-decode-form" phx-submit="decode_hex" class="mb-8">
+          <div class="flex gap-3 items-start">
+            <textarea
+              id="hex-decode-input"
+              name={@hex_form[:hex].name}
+              rows="6"
+              placeholder="Or paste raw transaction hex…"
+              spellcheck="false"
+              class="flex-1 rounded-xl border border-base-300 bg-base-200 px-4 py-3 font-mono text-xs leading-relaxed text-base-content placeholder:text-base-content/30 focus:outline-none focus:border-base-content/20"
+            >{Phoenix.HTML.Form.normalize_value("textarea", @hex_form[:hex].value)}</textarea>
+            <button
+              type="submit"
+              class="w-36 h-12 rounded-xl bg-bitcoin/15 text-bitcoin border border-bitcoin/30 font-semibold hover:opacity-80 transition-opacity shrink-0 cursor-pointer mt-1"
+            >
+              Decode Hex
             </button>
           </div>
         </.form>
