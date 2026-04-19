@@ -13,6 +13,9 @@ defmodule BtcTxFeedWeb.TxLookupLive do
       |> assign(:searched_txid, nil)
       |> assign(:task_ref, nil)
       |> assign(:hex_form, to_form(%{"hex" => ""}, as: :hex_form))
+      |> assign(:txid_dirty, false)
+      |> assign(:hex_dirty, false)
+      |> assign(:decoded_hex, nil)
 
     {:ok, socket}
   end
@@ -24,10 +27,13 @@ defmodule BtcTxFeedWeb.TxLookupLive do
     socket =
       if socket.assigns.searched_txid == txid and
            socket.assigns.tx_details not in [nil, :loading] do
-        assign(socket, :form, to_form(%{"txid" => txid}, as: :lookup))
+        socket
+        |> assign(:form, to_form(%{"txid" => txid}, as: :lookup))
+        |> assign(:txid_dirty, false)
       else
         socket
         |> assign(:form, to_form(%{"txid" => txid}, as: :lookup))
+        |> assign(:txid_dirty, false)
         |> start_fetch(txid)
       end
 
@@ -45,6 +51,9 @@ defmodule BtcTxFeedWeb.TxLookupLive do
       |> assign(:tx_details, nil)
       |> assign(:searched_txid, nil)
       |> assign(:task_ref, nil)
+      |> assign(:txid_dirty, false)
+      |> assign(:hex_dirty, false)
+      |> assign(:decoded_hex, nil)
 
     {:noreply, socket}
   end
@@ -53,17 +62,20 @@ defmodule BtcTxFeedWeb.TxLookupLive do
   def handle_info({ref, result}, socket) when ref == socket.assigns.task_ref do
     Process.demonitor(ref, [:flush])
 
-    hex =
+    {decoded_hex, form_hex} =
       case result do
-        {:ok, _details, raw_hex} -> raw_hex
-        _ -> ""
+        {:ok, _details, raw_hex} -> {raw_hex, raw_hex}
+        _ -> {nil, ""}
       end
 
     socket =
       socket
       |> assign(:tx_details, result)
       |> assign(:task_ref, nil)
-      |> assign(:hex_form, to_form(%{"hex" => hex}, as: :hex_form))
+      |> assign(:txid_dirty, false)
+      |> assign(:hex_dirty, false)
+      |> assign(:decoded_hex, decoded_hex)
+      |> assign(:hex_form, to_form(%{"hex" => form_hex}, as: :hex_form))
 
     {:noreply, socket}
   end
@@ -107,6 +119,9 @@ defmodule BtcTxFeedWeb.TxLookupLive do
       socket
       |> assign(:tx_details, result)
       |> assign(:searched_txid, txid)
+      |> assign(:txid_dirty, false)
+      |> assign(:hex_dirty, false)
+      |> assign(:decoded_hex, if(txid, do: hex, else: nil))
       |> assign(:form, to_form(%{"txid" => txid || ""}, as: :lookup))
 
     socket =
@@ -117,6 +132,24 @@ defmodule BtcTxFeedWeb.TxLookupLive do
       end
 
     {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("validate_lookup", %{"lookup" => %{"txid" => txid}}, socket) do
+    dirty =
+      socket.assigns.searched_txid != nil and
+        String.trim(txid) != socket.assigns.searched_txid
+
+    {:noreply, assign(socket, :txid_dirty, dirty)}
+  end
+
+  @impl true
+  def handle_event("validate_hex", %{"hex_form" => %{"hex" => hex}}, socket) do
+    dirty =
+      socket.assigns.decoded_hex != nil and
+        String.trim(hex) != socket.assigns.decoded_hex
+
+    {:noreply, assign(socket, :hex_dirty, dirty)}
   end
 
   defp start_fetch(socket, txid) do
@@ -149,7 +182,13 @@ defmodule BtcTxFeedWeb.TxLookupLive do
     ~H"""
     <Layouts.app flash={@flash} current_path={~p"/tx"}>
       <div class="max-w-4xl mx-auto">
-        <.form for={@form} id="tx-lookup-form" phx-submit="lookup" class="mb-3">
+        <.form
+          for={@form}
+          id="tx-lookup-form"
+          phx-submit="lookup"
+          phx-change="validate_lookup"
+          class="mb-3"
+        >
           <div class="flex gap-3 items-center">
             <input
               id={@form[:txid].id}
@@ -158,7 +197,13 @@ defmodule BtcTxFeedWeb.TxLookupLive do
               value={@form[:txid].value}
               spellcheck="false"
               placeholder="Paste a txid to fetch and decode the raw transaction…"
-              class="flex-1 h-12 rounded-xl border border-base-300 bg-base-200 px-4 font-mono text-xs text-base-content placeholder:text-base-content/30 focus:outline-none focus:border-base-content/20"
+              class={[
+                "flex-1 h-12 rounded-xl border px-4 font-mono text-xs text-base-content placeholder:text-base-content/30 focus:outline-none bg-base-200",
+                if(@txid_dirty,
+                  do: "border-amber-400/60",
+                  else: "border-base-300 focus:border-base-content/20"
+                )
+              ]}
             />
             <button
               type="submit"
@@ -169,7 +214,13 @@ defmodule BtcTxFeedWeb.TxLookupLive do
           </div>
         </.form>
 
-        <.form for={@hex_form} id="hex-decode-form" phx-submit="decode_hex" class="mb-8">
+        <.form
+          for={@hex_form}
+          id="hex-decode-form"
+          phx-submit="decode_hex"
+          phx-change="validate_hex"
+          class="mb-8"
+        >
           <div class="flex gap-3 items-start">
             <textarea
               id="hex-decode-input"
@@ -177,7 +228,13 @@ defmodule BtcTxFeedWeb.TxLookupLive do
               rows="6"
               placeholder="Or paste raw transaction hex…"
               spellcheck="false"
-              class="flex-1 rounded-xl border border-base-300 bg-base-200 px-4 py-3 font-mono text-xs leading-relaxed text-base-content placeholder:text-base-content/30 focus:outline-none focus:border-base-content/20"
+              class={[
+                "flex-1 rounded-xl border px-4 py-3 font-mono text-xs leading-relaxed text-base-content placeholder:text-base-content/30 focus:outline-none bg-base-200",
+                if(@hex_dirty,
+                  do: "border-amber-400/60",
+                  else: "border-base-300 focus:border-base-content/20"
+                )
+              ]}
             >{Phoenix.HTML.Form.normalize_value("textarea", @hex_form[:hex].value)}</textarea>
             <button
               type="submit"
