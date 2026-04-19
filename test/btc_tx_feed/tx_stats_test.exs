@@ -17,7 +17,6 @@ defmodule BtcTxFeed.TxStatsTest do
       %{
         version: 2,
         is_segwit: false,
-        has_coinbase_marker: false,
         validated: true,
         vsize: 200,
         input_count: 1,
@@ -46,16 +45,6 @@ defmodule BtcTxFeed.TxStatsTest do
       stats = TxStats.get()
       assert stats[:legacy_count] == 1
       assert stats[:segwit_count] == nil
-    end
-
-    test "increments coinbase_count when has_coinbase_marker is true" do
-      TxStats.record(base_details(%{has_coinbase_marker: true}))
-      assert TxStats.get()[:coinbase_count] == 1
-    end
-
-    test "does not increment coinbase_count for normal tx" do
-      TxStats.record(base_details())
-      assert TxStats.get()[:coinbase_count] == nil
     end
 
     test "increments validation_failure_count when validated is false" do
