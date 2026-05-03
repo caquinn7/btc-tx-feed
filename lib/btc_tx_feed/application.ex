@@ -61,7 +61,7 @@ defmodule BtcTxFeed.Application do
 
   defp analytics_children do
     if Application.get_env(:btc_tx_feed, :start_analytics, true) do
-      [BtcTxFeed.TxStats, BtcTxFeed.TxSampler]
+      [BtcTxFeed.TxStats, BtcTxFeed.TxSampler, BtcTxFeed.CoinbaseSampler]
     else
       []
     end
