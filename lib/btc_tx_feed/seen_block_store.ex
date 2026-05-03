@@ -13,14 +13,21 @@ defmodule BtcTxFeed.SeenBlockStore do
   end
 
   @doc """
-  Inserts a block hash. No-ops silently on conflict (idempotent).
+  Inserts a block hash and its unix timestamp. No-ops silently on conflict (idempotent).
   """
-  def insert!(block_hash) do
+  def insert!(block_hash, block_unix_timestamp) do
+    block_timestamp =
+      block_unix_timestamp
+      |> DateTime.from_unix!()
+      |> DateTime.to_naive()
+      |> NaiveDateTime.truncate(:second)
+
     Repo.insert_all(
       "seen_blocks",
       [
         %{
           block_hash: block_hash,
+          block_timestamp: block_timestamp,
           inserted_at: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
         }
       ],
