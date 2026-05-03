@@ -29,7 +29,8 @@ defmodule BtcTxFeed.TxRetentionRulesTest do
     witness_total_items: 0,
     witness_total_bytes: 0,
     largest_witness_item_bytes: 0,
-    inputs_with_witness_count: 0
+    inputs_with_witness_count: 0,
+    largest_script_sig_bytes: 107
   }
 
   @segwit_details %{
@@ -53,7 +54,8 @@ defmodule BtcTxFeed.TxRetentionRulesTest do
     witness_total_items: 4,
     witness_total_bytes: 210,
     largest_witness_item_bytes: 72,
-    inputs_with_witness_count: 2
+    inputs_with_witness_count: 2,
+    largest_script_sig_bytes: 0
   }
 
   @op_return_details %{
@@ -77,7 +79,8 @@ defmodule BtcTxFeed.TxRetentionRulesTest do
     witness_total_items: 0,
     witness_total_bytes: 0,
     largest_witness_item_bytes: 0,
-    inputs_with_witness_count: 0
+    inputs_with_witness_count: 0,
+    largest_script_sig_bytes: 0
   }
 
   # ---------------------------------------------------------------------------
@@ -558,6 +561,49 @@ defmodule BtcTxFeed.TxRetentionRulesTest do
     test "matches threshold equal to the exact distinct count" do
       # @segwit_details has 1 distinct type (p2_w_p_k_h)
       assert TxRetentionRules.match?(@segwit_details, {:distinct_output_script_types_gte, 1})
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # validate_rule/1 — largest_script_sig_bytes scalar field
+  # ---------------------------------------------------------------------------
+
+  describe "validate_rule/1 — :largest_script_sig_bytes scalar field" do
+    test "accepts {:gte, :largest_script_sig_bytes, n}" do
+      assert :ok = TxRetentionRules.validate_rule({:gte, :largest_script_sig_bytes, 80})
+    end
+
+    test "accepts {:gt, :largest_script_sig_bytes, n}" do
+      assert :ok = TxRetentionRules.validate_rule({:gt, :largest_script_sig_bytes, 0})
+    end
+
+    test "accepts {:between, :largest_script_sig_bytes, min, max}" do
+      assert :ok = TxRetentionRules.validate_rule({:between, :largest_script_sig_bytes, 80, 100})
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # match?/2 — :largest_script_sig_bytes
+  # ---------------------------------------------------------------------------
+
+  describe "match?/2 — :largest_script_sig_bytes" do
+    # @legacy_details has largest_script_sig_bytes: 107
+
+    test "matches when largest scriptSig meets threshold" do
+      assert TxRetentionRules.match?(@legacy_details, {:gte, :largest_script_sig_bytes, 80})
+      assert TxRetentionRules.match?(@legacy_details, {:gte, :largest_script_sig_bytes, 107})
+    end
+
+    test "does not match when largest scriptSig is below threshold" do
+      refute TxRetentionRules.match?(@legacy_details, {:gte, :largest_script_sig_bytes, 108})
+    end
+
+    test "matches 0 threshold for segwit inputs with empty scriptSigs" do
+      assert TxRetentionRules.match?(@segwit_details, {:gte, :largest_script_sig_bytes, 0})
+    end
+
+    test "does not match positive threshold when all scriptSigs are empty" do
+      refute TxRetentionRules.match?(@segwit_details, {:gte, :largest_script_sig_bytes, 1})
     end
   end
 end

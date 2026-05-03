@@ -59,7 +59,9 @@ defmodule BtcTxFeed.TxRetentionRules do
                    :witness_total_items,
                    :witness_total_bytes,
                    :largest_witness_item_bytes,
-                   :inputs_with_witness_count
+                   :inputs_with_witness_count,
+                   # Input script summary fields
+                   :largest_script_sig_bytes
                  ])
 
   # ---------------------------------------------------------------------------

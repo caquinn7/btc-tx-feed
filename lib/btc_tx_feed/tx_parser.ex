@@ -34,8 +34,20 @@ defmodule BtcTxFeed.TxParser do
     is_segwit = :btc_tx.is_segwit(tx)
     inputs = :btc_tx.get_inputs(tx)
     outputs = :btc_tx.get_outputs(tx)
+    extracted_inputs = extract_inputs(inputs)
     extracted_outputs = extract_outputs(outputs)
     {witnesses, witness_summaries} = extract_witness_data(tx, is_segwit)
+
+    largest_script_sig_bytes =
+      case extracted_inputs do
+        [] ->
+          0
+
+        ins ->
+          ins
+          |> Enum.map(& &1.script_sig_length)
+          |> Enum.max()
+      end
 
     base =
       %{
@@ -45,9 +57,10 @@ defmodule BtcTxFeed.TxParser do
         has_coinbase_marker: :btc_tx.has_coinbase_marker(tx),
         input_count: length(inputs),
         output_count: length(outputs),
-        inputs: extract_inputs(inputs),
+        inputs: extracted_inputs,
         outputs: extracted_outputs,
-        witnesses: witnesses
+        witnesses: witnesses,
+        largest_script_sig_bytes: largest_script_sig_bytes
       }
       |> Map.merge(build_output_script_summaries(extracted_outputs))
       |> Map.merge(witness_summaries)
