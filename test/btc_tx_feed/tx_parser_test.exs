@@ -387,6 +387,45 @@ defmodule BtcTxFeed.TxParserTest do
   # Witness summaries
   # ---------------------------------------------------------------------------
 
+  # ---------------------------------------------------------------------------
+  # Script sig summaries
+  # ---------------------------------------------------------------------------
+
+  describe "largest_script_sig_bytes for a legacy tx (non-zero scriptSig)" do
+    setup do
+      {:ok, details} = TxParser.parse(raw(@legacy_v1_hex))
+      %{details: details}
+    end
+
+    test "largest_script_sig_bytes is present", %{details: details} do
+      assert Map.has_key?(details, :largest_script_sig_bytes)
+    end
+
+    test "largest_script_sig_bytes equals the max script_sig_length across inputs", %{
+      details: details
+    } do
+      expected = details.inputs |> Enum.map(& &1.script_sig_length) |> Enum.max()
+      assert details.largest_script_sig_bytes == expected
+    end
+
+    test "largest_script_sig_bytes is greater than 0 for a signed legacy input", %{
+      details: details
+    } do
+      assert details.largest_script_sig_bytes > 0
+    end
+  end
+
+  describe "largest_script_sig_bytes for a native segwit tx (empty scriptSigs)" do
+    setup do
+      {:ok, details} = TxParser.parse(raw(@segwit_v1_hex))
+      %{details: details}
+    end
+
+    test "largest_script_sig_bytes is 0 when all scriptSigs are empty", %{details: details} do
+      assert details.largest_script_sig_bytes == 0
+    end
+  end
+
   describe "witness summaries for a legacy tx" do
     setup do
       {:ok, details} = TxParser.parse(raw(@legacy_v1_hex))
