@@ -70,12 +70,12 @@ defmodule BtcTxFeed.CoinbaseSampler do
   defp process_new_blocks(state) do
     case MempoolHttpClient.get_recent_blocks() do
       {:ok, blocks} ->
-        new_block_ids =
+        new_blocks =
           blocks
-          |> Enum.map(& &1["id"])
-          |> Enum.reject(&MapSet.member?(state.seen_block_ids, &1))
+          |> Enum.map(&{&1["id"], &1["timestamp"]})
+          |> Enum.reject(fn {id, _ts} -> MapSet.member?(state.seen_block_ids, id) end)
 
-        process_blocks(new_block_ids, state)
+        process_blocks(new_blocks, state)
 
       {:error, {:http_error, 429}} ->
         send(self(), :backoff)
@@ -89,20 +89,20 @@ defmodule BtcTxFeed.CoinbaseSampler do
 
   defp process_blocks([], state), do: state
 
-  defp process_blocks([block_id | rest], state) do
-    case fetch_and_process_coinbase(block_id, state) do
+  defp process_blocks([{block_id, block_timestamp} | rest], state) do
+    case fetch_and_process_coinbase(block_id, block_timestamp, state) do
       {:ok, state} -> process_blocks(rest, state)
       {:backoff, state} -> state
     end
   end
 
-  defp fetch_and_process_coinbase(block_id, state) do
+  defp fetch_and_process_coinbase(block_id, block_timestamp, state) do
     case MempoolHttpClient.get_block_txid(block_id, 0) do
       {:ok, txid} ->
         case MempoolHttpClient.get_raw_tx(txid) do
           {:ok, raw} ->
             process_raw(txid, raw)
-            state = mark_seen(state, block_id)
+            state = mark_seen(state, block_id, block_timestamp)
             {:ok, state}
 
           {:error, {:http_error, 429}} ->
@@ -114,7 +114,7 @@ defmodule BtcTxFeed.CoinbaseSampler do
               "CoinbaseSampler: failed to fetch raw tx for block #{block_id}: #{inspect(reason)}"
             )
 
-            state = mark_seen(state, block_id)
+            state = mark_seen(state, block_id, block_timestamp)
             {:ok, state}
         end
 
@@ -127,7 +127,7 @@ defmodule BtcTxFeed.CoinbaseSampler do
           "CoinbaseSampler: failed to fetch txid for block #{block_id}: #{inspect(reason)}"
         )
 
-        state = mark_seen(state, block_id)
+        state = mark_seen(state, block_id, block_timestamp)
         {:ok, state}
     end
   end
@@ -160,8 +160,8 @@ defmodule BtcTxFeed.CoinbaseSampler do
     end
   end
 
-  defp mark_seen(state, block_id) do
-    SeenBlockStore.insert!(block_id)
+  defp mark_seen(state, block_id, block_timestamp) do
+    SeenBlockStore.insert!(block_id, block_timestamp)
     %{state | seen_block_ids: MapSet.put(state.seen_block_ids, block_id)}
   end
 end
