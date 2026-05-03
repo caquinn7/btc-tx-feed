@@ -127,6 +127,7 @@ defmodule BtcTxFeed.CoinbaseSampler do
           "CoinbaseSampler: failed to fetch txid for block #{block_id}: #{inspect(reason)}"
         )
 
+        state = mark_seen(state, block_id)
         {:ok, state}
     end
   end
