@@ -18,7 +18,12 @@ defmodule BtcTxFeed.SeenBlockStore do
   def insert!(block_hash) do
     Repo.insert_all(
       "seen_blocks",
-      [%{block_hash: block_hash, inserted_at: DateTime.utc_now(:second)}],
+      [
+        %{
+          block_hash: block_hash,
+          inserted_at: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+        }
+      ],
       on_conflict: :nothing,
       conflict_target: [:block_hash]
     )
